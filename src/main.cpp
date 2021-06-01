@@ -3,6 +3,7 @@
 #include <vector>
 #include <tbb/concurrent_hash_map.h>
 #include "lrucache.h"
+#include "scale-lrucache.h"
 
 template <typename... T>
 constexpr void unused(T... t) {
@@ -57,9 +58,30 @@ auto main(int argc, char* argv[]) -> int {
 
   LRUC::LRUCache<int, int>::ConstAccessor ca;
   if (!lruc.find(ca, 1)) {
-    std::cout << "key 1 not found" << std::endl;
+    std::cout << "lruc key 1 not found" << std::endl;
   }
 
   lruc.find(ca, 3);
   std::cout << *ca << std::endl;
+
+  // ScalableLRUCache
+  LRUC::ScalableLRUCache<int, int> slruc{7};
+  slruc.insert(1, 11);
+  slruc.insert(2, 22);
+  slruc.insert(3, 33);
+  slruc.insert(4, 44);
+  slruc.insert(5, 55);
+  slruc.insert(6, 66);
+  slruc.insert(7, 77);
+  slruc.insert(8, 88);
+
+  LRUC::ScalableLRUCache<int, int>::ConstAccessor sca;
+  if (!slruc.find(sca, 1)) {
+    std::cout << "slruc key 1 not found" << std::endl;
+  }
+  slruc.find(sca, 3);
+  std::cout << *sca << std::endl;
+
+  std::cout << "end"
+            << "\n";
 }
