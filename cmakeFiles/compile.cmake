@@ -6,6 +6,9 @@ SET(CMAKE_CXX_STANDARD_REQUIRED True)
 # https://stackoverflow.com/a/7032021
 set(CMAKE_CXX_COMPILER "clang++")
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+
 # compile with C++ 17 standard
 # https://cmake.org/cmake/help/latest/manual/cmake-compile-features.7.html#requiring-language-standards
 target_compile_features(${EXEC_NAME} PRIVATE cxx_std_17)
