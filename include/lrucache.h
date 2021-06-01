@@ -172,9 +172,11 @@ public:
 
     constexpr const TValue* operator->() const { return get(); }
 
+    constexpr bool empty() const { return hashAccessor_.empty(); }
+
     constexpr const TValue* get() const { return &hashAccessor_->second.value_; }
 
-    constexpr bool empty() const { return hashAccessor_.empty(); }
+    constexpr void release() { hashAccessor_.release(); }
 
   private:
     friend class LRUCache;  // for LRUCache member function to access tbb::concurrent_hash_map::const_accessor
@@ -225,6 +227,8 @@ public:
    * Returns the number of elements in the container.
    */
   size_t size() const { return current_size_.load(); }
+
+  constexpr size_t capacity() const { return cache_size_; }
 };
 
 template <class TKey, class TValue, class THash>

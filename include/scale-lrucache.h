@@ -29,10 +29,9 @@ private:
   using ShardPtr = std::unique_ptr<Shard>;
 
   std::vector<ShardPtr> shards_;
-  /**
-   * LRUCache size.
-   */
+  // ScalableLRUCache size.
   size_t cache_size_;
+  // shard count
   size_t shard_count_;
 
 private:
@@ -64,9 +63,7 @@ public:
 
 template <class TKey, class TValue, class THash>
 ScalableLRUCache<TKey, TValue, THash>::ScalableLRUCache(size_t size, size_t shard_count)
-    : shards_(shard_count > 0 ? shard_count : std::thread::hardware_concurrency()),
-      cache_size_(size),
-      shard_count_(shard_count > 0 ? shard_count : std::thread::hardware_concurrency()) {
+    : cache_size_(size), shard_count_(shard_count > 0 ? shard_count : std::thread::hardware_concurrency()) {
   // capacity per LRUCache
   size_t cap = cache_size_ / shard_count_;
 
@@ -78,7 +75,9 @@ ScalableLRUCache<TKey, TValue, THash>::ScalableLRUCache(size_t size, size_t shar
 template <class TKey, class TValue, class THash>
 typename ScalableLRUCache<TKey, TValue, THash>::Shard& ScalableLRUCache<TKey, TValue, THash>::shard(const TKey& key) {
   THash hashObj{};
+  // lower 16 bits counted as hash key
   constexpr int shift = std::numeric_limits<size_t>::digits - 16;
+
   // According to intel TBB doc:
   // Good performance depends on having good pseudo-randomness in the low-order bits of the hash code.
   size_t h = (hashObj.hash(key) >> shift) % shard_count_;

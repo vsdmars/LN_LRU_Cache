@@ -1,3 +1,7 @@
+Cmake cmd:
+$ cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_FIND_DEBUG_MODE=ON -G Ninja ../
+$ ninja
+
 Requirement:
 LRU cache with confined size
 Thread-safe (lock-free or short lock period with mutex thread affinity)

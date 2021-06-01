@@ -39,30 +39,30 @@ auto main(int argc, char* argv[]) -> int {
   // return 1;
   // }
 
-  HashMap<int, int> hmap{4};
-  HashMapAccessor<decltype(getKeyType(hmap)), decltype(getValueType(hmap))> accessor;
-  HashMapValuePair<decltype(getKeyType(hmap)), decltype(getValueType(hmap))> value{42, 42};
+  // HashMap<int, int> hmap{4};
+  // HashMapAccessor<decltype(getKeyType(hmap)), decltype(getValueType(hmap))> accessor;
+  // HashMapValuePair<decltype(getKeyType(hmap)), decltype(getValueType(hmap))> value{42, 42};
 
-  hmap.insert(accessor, value);
+  // hmap.insert(accessor, value);
 
-  if (hmap.find(accessor, 42)) {
-    std::cout << accessor->second << std::endl;
-  }
+  // if (hmap.find(accessor, 42)) {
+  // std::cout << accessor->second << std::endl;
+  // }
 
-  // test LRUCache
-  LRUC::LRUCache<int, int> lruc{3};
-  lruc.insert(1, 11);
-  lruc.insert(2, 22);
-  lruc.insert(3, 33);
-  lruc.insert(4, 44);
+  // // test LRUCache
+  // LRUC::LRUCache<int, int> lruc{3};
+  // lruc.insert(1, 11);
+  // lruc.insert(2, 22);
+  // lruc.insert(3, 33);
+  // lruc.insert(4, 44);
 
-  LRUC::LRUCache<int, int>::ConstAccessor ca;
-  if (!lruc.find(ca, 1)) {
-    std::cout << "lruc key 1 not found" << std::endl;
-  }
+  // LRUC::LRUCache<int, int>::ConstAccessor ca;
+  // if (!lruc.find(ca, 1)) {
+  // std::cout << "lruc key 1 not found" << std::endl;
+  // }
 
-  lruc.find(ca, 3);
-  std::cout << *ca << std::endl;
+  // lruc.find(ca, 3);
+  // std::cout << *ca << std::endl;
 
   // ScalableLRUCache
   LRUC::ScalableLRUCache<int, int> slruc{7};
@@ -77,11 +77,13 @@ auto main(int argc, char* argv[]) -> int {
 
   LRUC::ScalableLRUCache<int, int>::ConstAccessor sca;
   if (!slruc.find(sca, 1)) {
-    std::cout << "slruc key 1 not found" << std::endl;
+    std::cout << "slruc key 1 not found\n\n" << std::flush;
+  } else {
+    std::cout << "slruc key 1 found\n\n" << std::flush;
   }
-  slruc.find(sca, 3);
-  std::cout << *sca << std::endl;
 
-  std::cout << "end"
-            << "\n";
+  slruc.find(sca, 8);
+  if (!sca.empty()) {
+    std::cout << "found val: " << *sca << '\n' << std::flush;
+  }
 }
