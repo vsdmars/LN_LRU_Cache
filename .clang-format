@@ -1,0 +1,17 @@
+---
+Language:        Cpp
+BasedOnStyle: Google
+AccessModifierOffset: -2
+ColumnLimit: 120
+DerivePointerAlignment: false
+PointerAlignment: Left
+SortIncludes: false
+...
+
+---
+Language: Proto
+ColumnLimit: 100
+SpacesInContainerLiterals: false
+AllowShortFunctionsOnASingleLine: false
+ReflowComments: false
+...

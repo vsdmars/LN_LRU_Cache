@@ -1,0 +1,1 @@
+SET(CMAKE_INSTALL_PREFIX "/tmp/lrud")

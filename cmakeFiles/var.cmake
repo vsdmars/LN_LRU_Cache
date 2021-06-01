@@ -1,0 +1,2 @@
+SET(EXEC_NAME lruc)
+SET(LIB_NAME lruc)
