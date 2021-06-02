@@ -1,5 +1,6 @@
 -std=c++17
 -I/usr/include/c++/10
+-I/usr/include
 -I./include
 -Wall
 -O3

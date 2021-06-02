@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
 
+# enable unit test
+# https://stackoverflow.com/a/30264765
+enable_testing()
+
 # include variables
 include("cmakeFiles/var.cmake")
 # setup version
@@ -7,7 +11,6 @@ include("cmakeFiles/version.cmake")
 
 # set the project name / version
 project(LRU_Cache VERSION ${LRUC_VERSION} LANGUAGES CXX)
-message("test: ${PROJECT_SOURCE_DIR}")
 
 add_subdirectory(src)
 
