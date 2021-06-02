@@ -228,6 +228,9 @@ public:
    */
   size_t size() const { return current_size_.load(); }
 
+  /**
+   * Returns LRUCache capacity
+   */
   constexpr size_t capacity() const { return cache_size_; }
 };
 
