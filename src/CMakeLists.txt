@@ -23,6 +23,10 @@ find_package(GTest REQUIRED)
 SET(LRUCACHE_TEST_SRC "lrucache_test.cpp")
 
 add_executable(${LRUCACHE_TEST} ${LRUCACHE_TEST_SRC})
+
+# LRUCache header
+target_include_directories(${LRUCACHE_TEST} PRIVATE "${CMAKE_SOURCE_DIR}/include")
+
 target_link_libraries(${LRUCACHE_TEST} PRIVATE GTest::gtest_main)
 gtest_discover_tests(${LRUCACHE_TEST})
 
@@ -31,6 +35,10 @@ gtest_discover_tests(${LRUCACHE_TEST})
 SET(SCALE_LRUCACHE_TEST_SRC "scale-lrucache_test.cpp")
 
 add_executable(${SCALE_LRUCACHE_TEST} ${SCALE_LRUCACHE_TEST_SRC})
+
+# LRUCache header
+target_include_directories(${SCALE_LRUCACHE_TEST} PRIVATE "${CMAKE_SOURCE_DIR}/include")
+
 target_link_libraries(${SCALE_LRUCACHE_TEST} PRIVATE GTest::gtest_main)
 gtest_discover_tests(${SCALE_LRUCACHE_TEST})
 

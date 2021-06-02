@@ -49,6 +49,8 @@ public:
    */
   explicit ScalableLRUCache(size_t size, size_t shard_count = 0);
 
+  ~ScalableLRUCache() { clear(); }
+
   ScalableLRUCache(const ScalableLRUCache&) = delete;
   ScalableLRUCache& operator=(const ScalableLRUCache&) = delete;
 

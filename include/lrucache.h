@@ -192,10 +192,10 @@ public:
    */
   explicit LRUCache(size_t size, size_t bucketCount = std::thread::hardware_concurrency() * 4);
 
+  ~LRUCache() { clear(); }
+
   LRUCache(const LRUCache& other) = delete;
   LRUCache& operator=(const LRUCache&) = delete;
-
-  ~LRUCache() { clear(); }
 
   /**
    * Find data inside hash-table through provided key.
