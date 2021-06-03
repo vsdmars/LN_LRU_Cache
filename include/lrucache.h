@@ -44,6 +44,9 @@ namespace LRUC {
  *
  * Type concepts:
  *  Types TKey and TValue must model the CopyConstructible concept.
+ *  For previous intel TBB, the TValue should also have DefaultConstructible concept due
+ *  to TBB will use TValue() as placeholder for key finding.
+ *  As for latest intel TBB has no such issue.
  *
  *  Type THash must model the TBB::HashCompare concept.
  *  Good performance depends on having good pseudo-randomness in the low-order bits of the hash code.
@@ -111,7 +114,7 @@ private:
     TValue value_;
     ListNode* listNode_;
 
-    constexpr Value() : listNode_(nullptr) {}
+    constexpr Value() = default;
     constexpr Value(const TValue& value, ListNode* node) : value_(value), listNode_(node) {}
   };
 

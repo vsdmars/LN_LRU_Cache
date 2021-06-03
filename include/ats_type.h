@@ -20,6 +20,7 @@ struct TimedEntityLookupInfo {
   int routingPrefixSize;
   bool requiresGoodBotUserAgent;
 
+  TimedEntityLookupInfo() = default;
   TimedEntityLookupInfo(long long int ts, int f = 0, int pre_fix_size = 32, bool requires_good_user_agent = false)
       : expiryTs(ts),
         denialInfoCode(f),
