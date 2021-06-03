@@ -20,9 +20,6 @@ protected:
   void TearDown() override {}
 };
 
-// create LRUCache instance
-auto f = [](size_t size) { LRU };
-
 // Demonstrate some basic assertions.
 TEST(LRUCacheTest, Test1) {
   // Expect two strings not to be equal.
