@@ -9,6 +9,7 @@
 
 #include "lrucache.h"
 #include "scale-lrucache.h"
+#include "ats_tbb.h"
 #include "ats_type.h"
 
 template <typename... T>

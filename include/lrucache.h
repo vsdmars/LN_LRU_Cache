@@ -388,5 +388,4 @@ void LRUCache<TKey, TValue, THash>::clear() {
   tail_.prev_ = &head_;
   current_size_ = 0;
 }
-
 }  // namespace LRUC
