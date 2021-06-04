@@ -11,6 +11,9 @@
 // Boost lib
 #include <boost/functional/hash.hpp>
 
+// intel TBB
+#include <tbb/concurrent_hash_map.h>
+
 namespace AtsPluginUtils {
 
 // Value, code from traffic team

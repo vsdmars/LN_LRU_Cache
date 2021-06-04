@@ -27,6 +27,7 @@ add_executable(${LRUCACHE_TEST} ${LRUCACHE_TEST_SRC})
 # LRUCache header
 target_include_directories(${LRUCACHE_TEST} PRIVATE "${CMAKE_SOURCE_DIR}/include")
 
+target_link_libraries(${LRUCACHE_TEST} PRIVATE TBB::tbb)
 target_link_libraries(${LRUCACHE_TEST} PRIVATE GTest::gtest_main)
 gtest_discover_tests(${LRUCACHE_TEST})
 
