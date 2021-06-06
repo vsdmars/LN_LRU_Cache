@@ -12,8 +12,10 @@
 #include <random>
 #include <sstream>
 #include <thread>
+#include <tuple>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
 // intel TBB header
 #include <tbb/parallel_for_each.h>
@@ -67,6 +69,14 @@ void containerInsert(T&& t, int b, int c, int d, int expiryTS) {
   std::stringstream ipv4;
   ipv4 << "192." << b << "." << c << "." << d;
   t.insert(ipv4.str());
+}
+
+template <typename T, typename... U>
+void containerInsert(std::vector<T, U...>& t, int b, int c, int d, int expiryTS) {
+  std::stringstream ipv4;
+  ipv4 << "192." << b << "." << c << "." << d;
+
+  t.emplace_back(create_IpAddress(ipv4.str()), create_teli(expiryTS));
 }
 
 template <>

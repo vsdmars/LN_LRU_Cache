@@ -55,6 +55,7 @@ TEST_F(LRUCache2MTest, TestSingleThread) {
 
   std::stringstream randomIPv4;
   randomIPv4 << "192." << rangeB(gen) << "." << rangeCD(gen) << "." << rangeCD(gen);
+  create_IpAddress(randomIPv4.str());
   EXPECT_TRUE(lruc.find(ca, create_IpAddress(randomIPv4.str())))
       << "IP [" << randomIPv4.str() << "] can't be found in lru cache";
   EXPECT_EQ(EXPIRYTS, (*ca).expiryTs);

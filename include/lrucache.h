@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <iostream>
 #include <atomic>
 #include <mutex>
 #include <new>
@@ -82,6 +83,7 @@ private:
 
 private:
   struct ListNode;
+  // used for judging a node exist inside the double-linked list.
   static ListNode* const NullNodePtr;
 
 private:
@@ -177,13 +179,20 @@ public:
 
     constexpr bool empty() const { return hashAccessor_.empty(); }
 
-    constexpr const TValue* get() const { return &hashAccessor_->second.value_; }
+    constexpr const TValue* get() const { return &value_; }
 
     constexpr void release() { hashAccessor_.release(); }
 
   private:
+    /**
+     * copy TValue from concurrent_hash_map thus caller could release lock early.
+     */
+    void setValue() { value_ = hashAccessor_->second.value_; }
+
+  private:
     friend class LRUCache;  // for LRUCache member function to access tbb::concurrent_hash_map::const_accessor
     HashMapConstAccessor hashAccessor_;
+    TValue value_;
   };
 
   /**
@@ -247,6 +256,7 @@ inline void LRUCache<TKey, TValue, THash>::unlink(ListNode* node) {
   ListNode* next = node->next_;
   prev->next_ = next;
   next->prev_ = prev;
+  // assign to NullNodePtr as indicator for this node is no longer in the double-linked list.
   node->prev_ = NullNodePtr;
 }
 
@@ -277,14 +287,12 @@ void LRUCache<TKey, TValue, THash>::popFront() {
     unlink(candidate);
   }
 
-  {
-    HashMapConstAccessor constHashAccessor;
-    if (!hash_map_.find(constHashAccessor, candidate->key_)) {
-      return;
-    }
-
-    hash_map_.erase(constHashAccessor);
+  HashMapConstAccessor constHashAccessor;
+  if (!hash_map_.find(constHashAccessor, candidate->key_)) {
+    return;
   }
+
+  hash_map_.erase(constHashAccessor);
 
   delete candidate;
 }
@@ -301,21 +309,26 @@ LRUCache<TKey, TValue, THash>::LRUCache(size_t size, size_t bucketCount)
 
 template <class TKey, class TValue, class THash>
 bool LRUCache<TKey, TValue, THash>::find(ConstAccessor& caccessor, const TKey& key) {
+  ListNode* found_node;
+
   // immutable read accessor
   HashMapConstAccessor& hashAccessor = caccessor.hashAccessor_;
-
   if (!hash_map_.find(hashAccessor, key)) {
+    hashAccessor.release();  // release early
     return false;
+  } else {
+    caccessor.setValue();
+    found_node = hashAccessor->second.listNode_;
+    hashAccessor.release();  // release early
   }
 
   {
     // Key found, update double-linked list with try lock.
     std::unique_lock<ListMutex> lock{listMutex_, std::try_to_lock};
     if (lock) {
-      ListNode* const node = hashAccessor->second.listNode_;
-      if (node->inList()) {
-        unlink(node);
-        append(node);
+      if (found_node->inList()) {
+        unlink(found_node);
+        append(found_node);
       }
     }
   }
@@ -327,12 +340,16 @@ template <class TKey, class TValue, class THash>
 bool LRUCache<TKey, TValue, THash>::insert(const TKey& key, const TValue& value) {
   // create node with key through default new allocator.
   ListNode* node = new ListNode(key);
-  HashMapAccessor hashAccessor;
-  HashMapValuePair hashMapValue(key, Value(value, node));
-  // hashMapValue is copied and memory allocated in concurrent_hash_map
-  if (!hash_map_.insert(hashAccessor, hashMapValue)) {
-    delete node;
-    return false;
+
+  {
+    // release HashMapAccessor early
+    HashMapAccessor hashAccessor;
+    HashMapValuePair hashMapValue(key, Value(value, node));
+    // hashMapValue is copied and memory allocated in concurrent_hash_map
+    if (!hash_map_.insert(hashAccessor, hashMapValue)) {
+      delete node;
+      return false;
+    }
   }
 
   // While hits LRUCache capacity, evict one item from double-linked list.
@@ -361,8 +378,8 @@ bool LRUCache<TKey, TValue, THash>::insert(const TKey& key, const TValue& value)
   // which consumes power and increases latency for insertion.
   if (size > cache_size_) {
     // Use compare_exchange_strong with default sequential consistency memory model.
-    // Update double-linked list iff there's no size change between
-    // previous expression.
+    // Update double-linked list iff there's no value change in between
+    // previous load expression to (size - 1).
     if (current_size_.compare_exchange_strong(size, size - 1)) {
       popFront();
     }
