@@ -54,6 +54,14 @@ target_include_directories(${LRUCACHE_BENCH} PRIVATE "${CMAKE_SOURCE_DIR}/includ
 target_link_libraries(${LRUCACHE_BENCH} PRIVATE TBB::tbb)
 target_link_libraries(${LRUCACHE_BENCH} PRIVATE benchmark::benchmark)
 
+# -- ScalableLRUCache benchmark test --
+SET(SCALABLE_LRUCACHE_BENCH_SRC "scalable_lrucache_bench.cpp")
+add_executable(${SCALE_LRUCACHE_BENCH} ${SCALABLE_LRUCACHE_BENCH_SRC})
+
+# ScalableLRUCache header
+target_include_directories(${SCALE_LRUCACHE_BENCH} PRIVATE "${CMAKE_SOURCE_DIR}/include")
+target_link_libraries(${SCALE_LRUCACHE_BENCH} PRIVATE TBB::tbb)
+target_link_libraries(${SCALE_LRUCACHE_BENCH} PRIVATE benchmark::benchmark)
 
 # -- setup binary location --
 set_property(TARGET ${EXEC_NAME}
@@ -66,6 +74,9 @@ set_property(TARGET ${LRUCACHE_BENCH}
     PROPERTY RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/test_bin")
 
 set_property(TARGET ${SCALE_LRUCACHE_TEST}
+    PROPERTY RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/test_bin")
+
+set_property(TARGET ${SCALE_LRUCACHE_BENCH}
     PROPERTY RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/test_bin")
 
 set_property(TARGET ${LIB_NAME}

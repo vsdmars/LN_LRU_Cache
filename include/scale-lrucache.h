@@ -79,6 +79,7 @@ typename ScalableLRUCache<TKey, TValue, THash>::Shard& ScalableLRUCache<TKey, TV
   // According to intel TBB doc:
   // Good performance depends on having good pseudo-randomness in the low-order bits of the hash code.
   size_t h = (hashObj.hash(key) >> shift) % shard_count_;
+
   return *shards_[h];
 }
 // ---- private end ----
@@ -136,6 +137,7 @@ size_t ScalableLRUCache<TKey, TValue, THash>::capacity() const {
   for (size_t i = 0; i < shard_count_; i++) {
     size += shards_[i]->capacity();
   }
+
   return size;
 }
 

@@ -138,8 +138,8 @@ TEST_F(LRUCache2MTest, TestMultiThread_2) {
 
   // processing pipeline
   // stage 1. pipe IPs in sequence.
-  // stage 2. insert IPs into ScalableLRUCache in parallel.
-  // stage 3. IPs lookup in ScalableLRUCache while insert continues to happen.
+  // stage 2. insert IPs into LRUCache in parallel.
+  // stage 3. IPs lookup in LRUCache while insert continues to happen.
   // stage 4. update total IP insertion count.
   tbb::parallel_pipeline(
       std::thread::hardware_concurrency() * 2,

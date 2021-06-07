@@ -112,7 +112,7 @@ private:
    * which contains hash-table key.
    */
   struct Value final {
-    // use std::ref/std::cref for uncopyable type
+    // could use std::ref/std::cref for uncopyable type
     TValue value_;
     ListNode* listNode_;
 

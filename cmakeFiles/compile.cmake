@@ -29,7 +29,7 @@ target_compile_options(${SCALE_LRUCACHE_TEST} PRIVATE -O3 -Wall -Wconversion -Wd
 target_compile_options(${LRUCACHE_BENCH} PRIVATE -O3 -Wall -Wconversion -Wdouble-promotion -Weffc++ -Wextra -Wfloat-equal -Wformat=2 -Wno-error=unused-variable -Wnull-dereference -Wold-style-cast -Wpedantic -Wshadow -Wuninitialized -Wunreachable-code -Wredundant-move -Wpessimizing-move -Wthread-safety)
 
 # extra compile options
-# target_compile_options(${SCALE_LRUCACHE_BENCH} PRIVATE -O3 -Wall -Wconversion -Wdouble-promotion -Weffc++ -Wextra -Wfloat-equal -Wformat=2 -Wno-error=unused-variable -Wnull-dereference -Wold-style-cast -Wpedantic -Wshadow -Wuninitialized -Wunreachable-code -Wredundant-move -Wpessimizing-move -Wthread-safety)
+target_compile_options(${SCALE_LRUCACHE_BENCH} PRIVATE -O3 -Wall -Wconversion -Wdouble-promotion -Weffc++ -Wextra -Wfloat-equal -Wformat=2 -Wno-error=unused-variable -Wnull-dereference -Wold-style-cast -Wpedantic -Wshadow -Wuninitialized -Wunreachable-code -Wredundant-move -Wpessimizing-move -Wthread-safety)
 
 # RPATH setup
 SET(CMAKE_SKIP_BUILD_RPATH  FALSE)
