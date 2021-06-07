@@ -19,7 +19,7 @@
 
 // intel TBB header
 #include <tbb/parallel_for_each.h>
-#include "tbb/pipeline.h"
+#include <tbb/pipeline.h>
 
 #include "ats_tbb.h"
 #include "ats_type.h"

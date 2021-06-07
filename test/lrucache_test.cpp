@@ -101,7 +101,7 @@ TEST_F(LRUCache2MTest, TestMultiThread_1) {
   }
 
   // concurrent insert/read from LRUCache
-  tbb::parallel_for_each(randomIPs, [this](auto item) {
+  tbb::parallel_for_each(begin(randomIPs), end(randomIPs), [this](auto item) {
     IPLRUCache::ConstAccessor ca;
     // insert IP concurrently
     lruc.insert(create_IpAddress(item), create_teli(EXPIRYTS));

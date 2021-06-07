@@ -47,7 +47,11 @@ TEST_F(ScaleLRUCache2MTest, TestSingleThread) {
   for (int i = 0; i < lruc.shardCount(); i++) {
     std::cout << "Shard[" << i << "] size: [" << lruc.size(i) << "]\n" << std::flush;
 
-    EXPECT_GE(LRUC_SIZE / lruc.shardCount(), lruc.size(i)) << "Shard[" << i << "] size is too large";
+    if (i == 0){
+      EXPECT_GE(lruc.size(i), LRUC_SIZE / lruc.shardCount()) << "Shard[" << i << "] size is too small";
+    } else {
+      EXPECT_GE(LRUC_SIZE / lruc.shardCount(), lruc.size(i)) << "Shard[" << i << "] size is too large";
+    }
   }
 
   // random generator
@@ -97,7 +101,7 @@ TEST_F(ScaleLRUCache2MTest, TestMultiThread_1) {
   ipJob(flushOutIPs, rbfrom, rbto, cfrom, cto, dfrom, dto, EXPIRYTS);
 
   // insert 2M IPs concurrently.
-  tbb::parallel_for_each(flushOutIPs, [this](auto item) {
+  tbb::parallel_for_each(begin(flushOutIPs), end(flushOutIPs), [this](auto item) {
     // insert IP concurrently
     lruc.insert(create_IpAddress(item), create_teli(EXPIRYTS));
   });

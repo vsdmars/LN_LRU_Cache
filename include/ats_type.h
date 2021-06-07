@@ -39,18 +39,18 @@ struct IpAddress {
   // Implicit conversion from u_int32_t is allowed
   IpAddress(u_int32_t ip_v4) { set(ip_v4); }
 
-  explicit IpAddress(const struct sockaddr* base) { set(base); }
+  explicit IpAddress(const struct sockaddr* baseVal) { set(baseVal); }
 
   IpAddress(const IpAddress& rhs) { *this = rhs; }
 
   void clear() { memset(&v6, 0, sizeof(v6)); }
 
-  void set(const struct sockaddr* base) {
-    if (base->sa_family == AF_INET) {
+  void set(const struct sockaddr* baseVal) {
+    if (baseVal->sa_family == AF_INET) {
       clear();
-      memcpy(&v4, base, sizeof(v4));
-    } else if (base->sa_family == AF_INET6) {
-      memcpy(&v6, base, sizeof(v6));
+      memcpy(&v4, baseVal, sizeof(v4));
+    } else if (baseVal->sa_family == AF_INET6) {
+      memcpy(&v6, baseVal, sizeof(v6));
     }
   }
 

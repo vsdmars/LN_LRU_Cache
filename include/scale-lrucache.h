@@ -69,7 +69,7 @@ public:
   size_t shardCount() const;
 };
 
-// ---- private ----
+// ---- private member functions ----
 template <class TKey, class TValue, class THash>
 typename ScalableLRUCache<TKey, TValue, THash>::Shard& ScalableLRUCache<TKey, TValue, THash>::shard(const TKey& key) {
   THash hashObj{};
@@ -82,7 +82,7 @@ typename ScalableLRUCache<TKey, TValue, THash>::Shard& ScalableLRUCache<TKey, TV
 
   return *shards_[h];
 }
-// ---- private end ----
+// ---- private member functions end ----
 
 template <class TKey, class TValue, class THash>
 ScalableLRUCache<TKey, TValue, THash>::ScalableLRUCache(size_t size, size_t shard_count)
