@@ -12,7 +12,11 @@ include("cmakeFiles/version.cmake")
 # set the project name / version
 project(LRU_Cache VERSION ${LRUC_VERSION} LANGUAGES CXX)
 
+# binary to test LRUCache
 add_subdirectory(src)
+
+# unit test and benchmark binary
+add_subdirectory(test)
 
 # setup config options
 include("cmakeFiles/config.cmake")
