@@ -11,6 +11,9 @@ IPVec* randomIPs;
 std::random_device rd{};
 std::mt19937 gen{rd()};
 
+// thread count (depends on hardware)
+constexpr size_t tcnt = 16;
+
 /**
  * Benchmark for LRUCache find and insert in each thread.
  */
@@ -52,7 +55,7 @@ static void BM_LRUCacheConcurrentFindInsert_1(benchmark::State& state) {
     delete lruc;
   }
 }
-BENCHMARK(BM_LRUCacheConcurrentFindInsert_1)->Name("[concurrent] Find/Insert in each Thread")->Threads(32);
+BENCHMARK(BM_LRUCacheConcurrentFindInsert_1)->Name("[concurrent] Find/Insert in each Thread")->Threads(tcnt);
 
 /**
  * Benchmark for LRUCache find and insert in different thread.
@@ -97,7 +100,7 @@ static void BM_LRUCacheConcurrentFindInsert_2(benchmark::State& state) {
     delete lruc;
   }
 }
-BENCHMARK(BM_LRUCacheConcurrentFindInsert_2)->Name("[concurrent] Find/Insert in different Thread")->Threads(32);
+BENCHMARK(BM_LRUCacheConcurrentFindInsert_2)->Name("[concurrent] Find/Insert in different Thread")->Threads(tcnt);
 
 /**
  * Benchmark for LRUCache find in different thread.
@@ -138,7 +141,7 @@ static void BM_LRUCacheConcurrentFind_1(benchmark::State& state) {
     delete lruc;
   }
 }
-BENCHMARK(BM_LRUCacheConcurrentFind_1)->Name("[concurrent] Find in different Thread")->Threads(32);
+BENCHMARK(BM_LRUCacheConcurrentFind_1)->Name("[concurrent] Find in different Thread")->Threads(tcnt);
 
 /**
  * Benchmark for LRUCache insert in different thread.
@@ -178,7 +181,7 @@ static void BM_LRUCacheConcurrentInsert_1(benchmark::State& state) {
     delete lruc;
   }
 }
-BENCHMARK(BM_LRUCacheConcurrentInsert_1)->Name("[concurrent] Insert in different Thread")->Threads(32);
+BENCHMARK(BM_LRUCacheConcurrentInsert_1)->Name("[concurrent] Insert in different Thread")->Threads(tcnt);
 
 /**
  * Benchmark for LRUCache insert in sequential.

@@ -4,17 +4,20 @@
 
 using IPVec = std::vector<std::tuple<IpAddress, TimedEntityLookupInfo>>;
 // will be init. inside the benchmark functions.
-SCALE_IPLRUCache* slruc;
-IPVec* randomIPs;
+SCALE_IPLRUCache *slruc;
+IPVec *randomIPs;
 
 // init. random device.
 std::random_device rd{};
 std::mt19937 gen{rd()};
 
+// thread count (depends on hardware)
+constexpr size_t tcnt = 16;
+
 /**
  * Benchmark for ScalableLRUCache find and insert in each thread.
  */
-static void BM_ScalableLRUCacheConcurrentFindInsert_1(benchmark::State& state) {
+static void BM_ScalableLRUCacheConcurrentFindInsert_1(benchmark::State &state) {
   // keep those const variables inside the function and make it as constexpr
   constexpr int LRUC_SIZE = 1'885'725;
   constexpr int bfrom{0};
@@ -42,7 +45,8 @@ static void BM_ScalableLRUCacheConcurrentFindInsert_1(benchmark::State& state) {
     state.ResumeTiming();
 
     SCALE_IPLRUCache::ConstAccessor ca;
-    slruc->insert(std::get<0>((*randomIPs)[idx1]), std::get<1>((*randomIPs)[idx1]));
+    slruc->insert(std::get<0>((*randomIPs)[idx1]),
+                  std::get<1>((*randomIPs)[idx1]));
     slruc->find(ca, std::get<0>((*randomIPs)[idx2]));
   }
 
@@ -54,12 +58,12 @@ static void BM_ScalableLRUCacheConcurrentFindInsert_1(benchmark::State& state) {
 }
 BENCHMARK(BM_ScalableLRUCacheConcurrentFindInsert_1)
     ->Name("[concurrent] Scalable LRU Cache Find/Insert in each Thread")
-    ->Threads(32);
+    ->Threads(tcnt);
 
 /**
  * Benchmark for ScalableLRUCache find and insert in different thread.
  */
-static void BM_ScalableLRUCacheConcurrentFindInsert_2(benchmark::State& state) {
+static void BM_ScalableLRUCacheConcurrentFindInsert_2(benchmark::State &state) {
   // keep those const variables inside the function and make it as constexpr
   constexpr int LRUC_SIZE = 1'885'725;
   constexpr int bfrom{0};
@@ -89,7 +93,8 @@ static void BM_ScalableLRUCacheConcurrentFindInsert_2(benchmark::State& state) {
       IPLRUCache::ConstAccessor ca;
       slruc->find(ca, std::get<0>((*randomIPs)[idx1]));
     } else {
-      slruc->insert(std::get<0>((*randomIPs)[idx1]), std::get<1>((*randomIPs)[idx1]));
+      slruc->insert(std::get<0>((*randomIPs)[idx1]),
+                    std::get<1>((*randomIPs)[idx1]));
     }
   }
 
@@ -101,12 +106,12 @@ static void BM_ScalableLRUCacheConcurrentFindInsert_2(benchmark::State& state) {
 }
 BENCHMARK(BM_ScalableLRUCacheConcurrentFindInsert_2)
     ->Name("[concurrent] Scalable LRU Cache Find/Insert in different Thread")
-    ->Threads(32);
+    ->Threads(tcnt);
 
 /**
  * Benchmark for ScalableLRUCache find in different thread.
  */
-static void BM_ScalableLRUCacheConcurrentFind_1(benchmark::State& state) {
+static void BM_ScalableLRUCacheConcurrentFind_1(benchmark::State &state) {
   // keep those const variables inside the function and make it as constexpr
   constexpr int LRUC_SIZE = 1'885'725;
   constexpr int bfrom{0};
@@ -144,12 +149,12 @@ static void BM_ScalableLRUCacheConcurrentFind_1(benchmark::State& state) {
 }
 BENCHMARK(BM_ScalableLRUCacheConcurrentFind_1)
     ->Name("[concurrent] Scalable LRU Cache Find in different Thread")
-    ->Threads(32);
+    ->Threads(tcnt);
 
 /**
  * Benchmark for ScalableLRUCache insert in different thread.
  */
-static void BM_ScalableLRUCacheConcurrentInsert_1(benchmark::State& state) {
+static void BM_ScalableLRUCacheConcurrentInsert_1(benchmark::State &state) {
   // keep those const variables inside the function and make it as constexpr
   constexpr int LRUC_SIZE = 1'885'725;
   constexpr int bfrom{0};
@@ -175,7 +180,8 @@ static void BM_ScalableLRUCacheConcurrentInsert_1(benchmark::State& state) {
     auto idx1 = pick(gen);
     state.ResumeTiming();
 
-    slruc->insert(std::get<0>((*randomIPs)[idx1]), std::get<1>((*randomIPs)[idx1]));
+    slruc->insert(std::get<0>((*randomIPs)[idx1]),
+                  std::get<1>((*randomIPs)[idx1]));
   }
 
   // cleanup benchmark suite variables.
@@ -186,12 +192,12 @@ static void BM_ScalableLRUCacheConcurrentInsert_1(benchmark::State& state) {
 }
 BENCHMARK(BM_ScalableLRUCacheConcurrentInsert_1)
     ->Name("[concurrent] Scalable LRU Cache Insert in different Thread")
-    ->Threads(32);
+    ->Threads(tcnt);
 
 /**
  * Benchmark for ScalableLRUCache insert in sequential.
  */
-static void BM_ScalableLRUCacheInsert_1(benchmark::State& state) {
+static void BM_ScalableLRUCacheInsert_1(benchmark::State &state) {
   // keep those const variables inside the function and make it as constexpr
   constexpr int LRUC_SIZE = 1'885'725;
   constexpr int bfrom{0};
@@ -217,7 +223,8 @@ static void BM_ScalableLRUCacheInsert_1(benchmark::State& state) {
     auto idx1 = pick(gen);
     state.ResumeTiming();
 
-    slruc->insert(std::get<0>((*randomIPs)[idx1]), std::get<1>((*randomIPs)[idx1]));
+    slruc->insert(std::get<0>((*randomIPs)[idx1]),
+                  std::get<1>((*randomIPs)[idx1]));
   }
 
   // cleanup benchmark suite variables.
@@ -226,12 +233,13 @@ static void BM_ScalableLRUCacheInsert_1(benchmark::State& state) {
     delete slruc;
   }
 }
-BENCHMARK(BM_ScalableLRUCacheInsert_1)->Name("Scalable LRU Cacue Insert in sequential");
+BENCHMARK(BM_ScalableLRUCacheInsert_1)
+    ->Name("Scalable LRU Cacue Insert in sequential");
 
 /**
  * Benchmark for ScalableLRUCache find in sequential.
  */
-static void BM_ScalableLRUCacheFind_1(benchmark::State& state) {
+static void BM_ScalableLRUCacheFind_1(benchmark::State &state) {
   // keep those const variables inside the function and make it as constexpr
   constexpr int LRUC_SIZE = 1'885'725;
   constexpr int bfrom{0};
@@ -267,6 +275,7 @@ static void BM_ScalableLRUCacheFind_1(benchmark::State& state) {
     delete slruc;
   }
 }
-BENCHMARK(BM_ScalableLRUCacheFind_1)->Name("Scalable LRU Cache Find in sequential");
+BENCHMARK(BM_ScalableLRUCacheFind_1)
+    ->Name("Scalable LRU Cache Find in sequential");
 
 BENCHMARK_MAIN();
