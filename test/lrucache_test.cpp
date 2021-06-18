@@ -55,14 +55,18 @@ TEST_F(LRUCache2MTest, TestSingleThread) {
 
   std::stringstream randomIPv4;
   randomIPv4 << "192." << rangeB(gen) << "." << rangeCD(gen) << "." << rangeCD(gen);
-  create_IpAddress(randomIPv4.str());
   EXPECT_TRUE(lruc.find(ca, create_IpAddress(randomIPv4.str())))
       << "IP [" << randomIPv4.str() << "] can't be found in lru cache";
   EXPECT_EQ(EXPIRYTS, (*ca).expiryTs);
 
+
   lruc.insert(create_IpAddress(randomFalseIPv4.str()), create_teli(EXPIRYTS));
   EXPECT_FALSE(lruc.find(ca, create_IpAddress(EVICTED_IP)));
   EXPECT_TRUE(lruc.find(ca, create_IpAddress(NOT_EVICTED_IP)));
+
+  auto eraseResult = lruc.erase(create_IpAddress(randomFalseIPv4.str()));
+  EXPECT_EQ(1, eraseResult);
+  EXPECT_EQ(LRUC_SIZE-1, lruc.size());
 
   lruc.clear();
   EXPECT_FALSE(lruc.find(ca, create_IpAddress(NOT_EVICTED_IP))) << "LRU cache cleared but IP key still can be found";
@@ -106,12 +110,18 @@ TEST_F(LRUCache2MTest, TestMultiThread_1) {
     // insert IP concurrently
     lruc.insert(create_IpAddress(item), create_teli(EXPIRYTS));
     EXPECT_TRUE(lruc.find(ca, create_IpAddress(item)));
+
+    auto eraseResult = lruc.erase(create_IpAddress(item));
+    EXPECT_FALSE(lruc.find(ca, create_IpAddress(item)));
+    EXPECT_EQ(1, eraseResult);
+
+    EXPECT_FALSE(lruc.find(ca, create_IpAddress(item)));
   });
 
   IPLRUCache::ConstAccessor ca;
   EXPECT_FALSE(lruc.find(ca, create_IpAddress(EVICTED_IP)));
 
-  ASSERT_EQ(LRUC_SIZE, lruc.size()) << "lruc.size() result not match";
+  EXPECT_GE(LRUC_SIZE, lruc.size()) << "lruc.size() result not match";
   ASSERT_EQ(LRUC_SIZE, lruc.capacity()) << "lruc.capacity() result not match";
 }
 
@@ -140,9 +150,12 @@ TEST_F(LRUCache2MTest, TestMultiThread_2) {
   // stage 1. pipe IPs in sequence.
   // stage 2. insert IPs into LRUCache in parallel.
   // stage 3. IPs lookup in LRUCache while insert continues to happen.
-  // stage 4. update total IP insertion count.
+  // stage 4. erase IPs in LRUCache while insert/lookup continues to happen.
+  // stage 5. IPs lookup in LRUCache while insert/lookup/erase continues to happen.
+  // stage 6. update total IP insertion count.
   tbb::parallel_pipeline(
       std::thread::hardware_concurrency() * 2,
+      // stage 1.
       tbb::make_filter<void, std::string>(tbb::filter::serial, [&](tbb::flow_control& fc) -> std::string {
         if (si != ei) {
           return *si++;
@@ -150,19 +163,37 @@ TEST_F(LRUCache2MTest, TestMultiThread_2) {
           fc.stop();
           return "";
         }
+        // stage 2.
       }) & tbb::make_filter<std::string, std::string>(tbb::filter::parallel, [this](auto ipv4) -> std::string {
         lruc.insert(create_IpAddress(ipv4), create_teli(EXPIRYTS));
         return ipv4;
-      }) & tbb::make_filter<std::string, int>(tbb::filter::parallel, [this](auto ipv4) -> int {
+        // stage 3.
+      }) & tbb::make_filter<std::string, std::string>(tbb::filter::parallel, [this](auto ipv4) -> std::string {
         IPLRUCache::ConstAccessor ca;
         bool result = lruc.find(ca, create_IpAddress(ipv4));
 
         EXPECT_TRUE(result) << "IP: [" << ipv4 << "] not found";
 
-        return result;
+        return ipv4;
+        // stage 4.
+      }) & tbb::make_filter<std::string, std::string>(tbb::filter::parallel, [this](auto ipv4) -> std::string {
+        auto result = lruc.erase(create_IpAddress(ipv4));
+
+        EXPECT_EQ(1, result) << "IP: [" << ipv4 << "] not erased";
+
+        return ipv4;
+        // stage 5.
+      }) & tbb::make_filter<std::string, int>(tbb::filter::parallel, [this](auto ipv4) -> int {
+        IPLRUCache::ConstAccessor ca;
+        bool result = lruc.find(ca, create_IpAddress(ipv4));
+
+        EXPECT_FALSE(result) << "IP: [" << ipv4 << "] found after erase";
+
+        return 1;
+        // stage 6.
       }) & tbb::make_filter<int, void>(tbb::filter::serial, [&ipCnt](auto cnt) { ipCnt += cnt; }));
 
+  EXPECT_GE(LRUC_SIZE, lruc.size()) << "lruc.size() result not match";
   ASSERT_EQ(LRUC_SIZE, ipCnt) << "IP count not match";
-  ASSERT_EQ(LRUC_SIZE, lruc.size()) << "lruc.size() result not match";
   ASSERT_EQ(LRUC_SIZE, lruc.capacity()) << "lruc.capacity() result not match";
 }

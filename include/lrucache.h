@@ -1,22 +1,9 @@
-/*
- * Copyright (c) 2021 ShuoHuan Chang
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.*
+/**
+ * @author shchang
  */
 
 #pragma once
 
-#include <iostream>
 #include <atomic>
 #include <mutex>
 #include <new>
@@ -210,6 +197,12 @@ public:
   LRUCache& operator=(const LRUCache&) = delete;
 
   /**
+   * Erase removes key from LRUCache along with its value.
+   * returns number of elements removed (0 or 1).
+   */
+  size_t erase(const TKey& key);
+
+  /**
    * Find data inside hash-table through provided key.
    * ConstAccessor stores the found result.
    * Return true is key exist, otherwise return false.
@@ -274,6 +267,7 @@ inline void LRUCache<TKey, TValue, THash>::append(ListNode* node) {
 template <class TKey, class TValue, class THash>
 void LRUCache<TKey, TValue, THash>::popFront() {
   ListNode* candidate = nullptr;
+  TKey tmpKey;
 
   {
     std::unique_lock<ListMutex> lock(listMutex_);
@@ -285,16 +279,19 @@ void LRUCache<TKey, TValue, THash>::popFront() {
     }
 
     unlink(candidate);
+
+    tmpKey = candidate->key_;
+
+    delete candidate;
   }
 
   HashMapConstAccessor constHashAccessor;
-  if (!hash_map_.find(constHashAccessor, candidate->key_)) {
+  if (!hash_map_.find(constHashAccessor, tmpKey)) {
     return;
   }
 
   hash_map_.erase(constHashAccessor);
 
-  delete candidate;
 }
 
 // ---- private member functions end ----
@@ -305,6 +302,38 @@ LRUCache<TKey, TValue, THash>::LRUCache(size_t size, size_t bucketCount)
   head_.prev_ = nullptr;
   head_.next_ = &tail_;
   tail_.prev_ = &head_;
+}
+
+template <class TKey, class TValue, class THash>
+size_t LRUCache<TKey, TValue, THash>::erase(const TKey& key){
+  ListNode* found_node;
+
+  // immutable read accessor
+  HashMapConstAccessor hashAccessor{};
+  if (!hash_map_.find(hashAccessor, key)) {
+    hashAccessor.release();  // release early
+    return 0;
+  } else {
+    found_node = hashAccessor->second.listNode_;
+    hashAccessor.release();  // release early
+  }
+
+  // tbb::concurrent_hash_map.erase(key) by contract won't throw exception if key does not exist.
+  hash_map_.erase(key);
+
+  {
+    // Update double-linked list before update current_size_
+    std::unique_lock<ListMutex> lock(listMutex_);
+    if (found_node->inList()) {
+      unlink(found_node);
+      delete found_node;
+    }
+  }
+
+
+  current_size_--;
+
+  return 1;
 }
 
 template <class TKey, class TValue, class THash>
