@@ -12,7 +12,7 @@ namespace LRUC {
 
 template <class TKey, class TValue, class THash = tbb::tbb_hash_compare<TKey>>
 class ScalableLRUCache {
-private:
+ private:
   using Shard = LRUCache<TKey, TValue, THash>;
   using ShardPtr = std::unique_ptr<Shard>;
 
@@ -22,13 +22,13 @@ private:
   // shard count
   size_t shard_count_;
 
-private:
+ private:
   /**
    * shard returns a Shard (LRUCache instance) based on key.
    */
   Shard& shard(const TKey& key);
 
-public:
+ public:
   using ConstAccessor = typename Shard::ConstAccessor;
 
   /**
@@ -37,7 +37,9 @@ public:
    */
   explicit ScalableLRUCache(size_t size, size_t shard_count = 0);
 
-  ~ScalableLRUCache() { clear(); }
+  ~ScalableLRUCache() {
+    clear();
+  }
 
   ScalableLRUCache(const ScalableLRUCache&) = delete;
   ScalableLRUCache& operator=(const ScalableLRUCache&) = delete;
@@ -76,7 +78,7 @@ typename ScalableLRUCache<TKey, TValue, THash>::Shard& ScalableLRUCache<TKey, TV
 
 template <class TKey, class TValue, class THash>
 ScalableLRUCache<TKey, TValue, THash>::ScalableLRUCache(size_t size, size_t shard_count)
-    : cache_size_(size), shard_count_(shard_count > 0 ? shard_count : std::thread::hardware_concurrency()) {
+  : cache_size_(size), shard_count_(shard_count > 0 ? shard_count : std::thread::hardware_concurrency()) {
   // capacity per LRUCache
   size_t cap = cache_size_ / shard_count_;
   size_t modular = cache_size_ % shard_count_;
@@ -87,7 +89,7 @@ ScalableLRUCache<TKey, TValue, THash>::ScalableLRUCache(size_t size, size_t shar
 }
 
 template <class TKey, class TValue, class THash>
-size_t ScalableLRUCache<TKey, TValue, THash>::erase(const TKey& key){
+size_t ScalableLRUCache<TKey, TValue, THash>::erase(const TKey& key) {
   return shard(key).erase(key);
 }
 
