@@ -1,12 +1,11 @@
 #pragma once
 
+#include "IpAddress.h"
+
 // Boost lib header
 #include <boost/functional/hash.hpp>
-
 // intel TBB header
 #include <tbb/concurrent_hash_map.h>
-
-#include "ats_type.h"
 
 namespace tbb {
 using IpAddress = AtsPluginUtils::IpAddress;
@@ -26,7 +25,15 @@ constexpr uint64_t twang_mix64(uint64_t key) noexcept {
   return key;
 }
 
-// https://spec.oneapi.com/versions/latest/elements/oneTBB/source/named_requirements/containers/hash_compare.html
+/**
+ * tbb_hash_compare<IpAddress> is a fully specialized type with AtsPluginUtils::IpAddress
+ * for tbb::tbb_hash_compare used as hash function object type used by tbb::concurrent_hash_map
+ * to support AtsPluginUtils::IpAddress as key.
+ *
+ * Official document:
+ * https://spec.oneapi.com/versions/latest/elements/oneTBB/source/named_requirements/containers/hash_compare.html
+ *
+ */
 template <>
 struct tbb_hash_compare<IpAddress> {
   static std::size_t hash(const IpAddress& k) {
@@ -69,4 +76,4 @@ struct tbb_hash_compare<IpAddress> {
   }
 };
 
-}  // namespace tbb
+} // namespace tbb

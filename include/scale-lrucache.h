@@ -11,7 +11,7 @@
 namespace LRUC {
 
 template <class TKey, class TValue, class THash = tbb::tbb_hash_compare<TKey>>
-class ScalableLRUCache {
+class ScalableLRUCache final {
  private:
   using Shard = LRUCache<TKey, TValue, THash>;
   using ShardPtr = std::unique_ptr<Shard>;
