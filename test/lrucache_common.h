@@ -10,7 +10,7 @@
 #include <tbb/parallel_for_each.h>
 #include <tbb/pipeline.h>
 
-#include <LRUcacheSingleton.h>
+#include <lrucache_singleton.h>
 
 // posix header
 #include <arpa/inet.h>

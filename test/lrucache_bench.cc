@@ -1,8 +1,11 @@
 #include <benchmark/benchmark.h>
 
-#include <common_test.h>
+#include <lrucache_common.h>
 
-using IPVec = std::vector<std::tuple<IpAddress, TimedEntityLookupInfo>>;
+using namespace AtsPluginUtils;
+
+using IPVec = std::vector<std::tuple<IpAddress, CacheValue<CACHE_VALUE_TYPE::TIME_ENTITY_LOOKUP_INFO>>>;
+
 // will be init. inside the benchmark functions.
 IPLRUCache* lruc;
 IPVec* randomIPs;
