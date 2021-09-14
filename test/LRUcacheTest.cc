@@ -4,7 +4,7 @@
  * key type: IpAddress
  * value type: CacheValue<CACHE_VALUE_TYPE::TIME_ENTITY_LOOKUP_INFO>>
  */
-#include "lrucache_common.h"
+#include <lrucache_common.h>
 
 using namespace testing;
 
@@ -12,7 +12,7 @@ using namespace testing;
  * Init. LRUCache with 2M entries
  */
 class LRUCache2MTest : public Test {
- protected:
+protected:
   constexpr static int LRUC_SIZE = 1'885'725;
   constexpr static int EXPIRYTS = 42;
 
@@ -29,10 +29,8 @@ class LRUCache2MTest : public Test {
 
   IPLRUCache lruc{LRUC_SIZE};
 
- protected:
-  void SetUp() override {
-    ipJob(lruc, bfrom, bto, cfrom, cto, dfrom, dto, EXPIRYTS);
-  }
+protected:
+  void SetUp() override { ipJob(lruc, bfrom, bto, cfrom, cto, dfrom, dto, EXPIRYTS); }
   void TearDown() override {}
 };
 
@@ -62,7 +60,6 @@ TEST_F(LRUCache2MTest, TestSingleThread) {
   EXPECT_TRUE(lruc.find(ca, create_IpAddress(randomIPv4.str())))
       << "IP [" << randomIPv4.str() << "] can't be found in lru-cache";
   EXPECT_EQ(EXPIRYTS, (*ca).expiryTs);
-
 
   lruc.insert(create_IpAddress(randomFalseIPv4.str()), create_cache_value(EXPIRYTS));
   EXPECT_FALSE(lruc.find(ca, create_IpAddress(EVICTED_IP)));
@@ -158,46 +155,44 @@ TEST_F(LRUCache2MTest, TestMultiThread_2) {
   // stage 5. IPs lookup in LRUCache while insert/lookup/erase continues to happen.
   // stage 6. update total IP insertion count.
   tbb::parallel_pipeline(
-    std::thread::hardware_concurrency() * 2,
-    // stage 1.
-  tbb::make_filter<void, std::string>(tbb::filter::serial, [&](tbb::flow_control & fc) -> std::string {
-    if (si != ei) {
-      return *si++;
-    } else {
-      fc.stop();
-      return "";
-    }
-    // stage 2.
-  }) & tbb::make_filter<std::string, std::string>(tbb::filter::parallel, [this](auto ipv4) -> std::string {
-    lruc.insert(create_IpAddress(ipv4), create_cache_value(EXPIRYTS));
-    return ipv4;
-    // stage 3.
-  }) & tbb::make_filter<std::string, std::string>(tbb::filter::parallel, [this](auto ipv4) -> std::string {
-    IPLRUCache::ConstAccessor ca;
-    bool result = lruc.find(ca, create_IpAddress(ipv4));
+      std::thread::hardware_concurrency() * 2,
+      // stage 1.
+      tbb::make_filter<void, std::string>(tbb::filter::serial, [&](tbb::flow_control& fc) -> std::string {
+        if (si != ei) {
+          return *si++;
+        } else {
+          fc.stop();
+          return "";
+        }
+        // stage 2.
+      }) & tbb::make_filter<std::string, std::string>(tbb::filter::parallel, [this](auto ipv4) -> std::string {
+        lruc.insert(create_IpAddress(ipv4), create_cache_value(EXPIRYTS));
+        return ipv4;
+        // stage 3.
+      }) & tbb::make_filter<std::string, std::string>(tbb::filter::parallel, [this](auto ipv4) -> std::string {
+        IPLRUCache::ConstAccessor ca;
+        bool result = lruc.find(ca, create_IpAddress(ipv4));
 
-    EXPECT_TRUE(result) << "IP: [" << ipv4 << "] not found";
+        EXPECT_TRUE(result) << "IP: [" << ipv4 << "] not found";
 
-    return ipv4;
-    // stage 4.
-  }) & tbb::make_filter<std::string, std::string>(tbb::filter::parallel, [this](auto ipv4) -> std::string {
-    auto result = lruc.erase(create_IpAddress(ipv4));
+        return ipv4;
+        // stage 4.
+      }) & tbb::make_filter<std::string, std::string>(tbb::filter::parallel, [this](auto ipv4) -> std::string {
+        auto result = lruc.erase(create_IpAddress(ipv4));
 
-    EXPECT_EQ(1, result) << "IP: [" << ipv4 << "] not erased";
+        EXPECT_EQ(1, result) << "IP: [" << ipv4 << "] not erased";
 
-    return ipv4;
-    // stage 5.
-  }) & tbb::make_filter<std::string, int>(tbb::filter::parallel, [this](auto ipv4) -> int {
-    IPLRUCache::ConstAccessor ca;
-    bool result = lruc.find(ca, create_IpAddress(ipv4));
+        return ipv4;
+        // stage 5.
+      }) & tbb::make_filter<std::string, int>(tbb::filter::parallel, [this](auto ipv4) -> int {
+        IPLRUCache::ConstAccessor ca;
+        bool result = lruc.find(ca, create_IpAddress(ipv4));
 
-    EXPECT_FALSE(result) << "IP: [" << ipv4 << "] found after erase";
+        EXPECT_FALSE(result) << "IP: [" << ipv4 << "] found after erase";
 
-    return 1;
-    // stage 6.
-  }) & tbb::make_filter<int, void>(tbb::filter::serial, [&ipCnt](auto cnt) {
-    ipCnt += cnt;
-  }));
+        return 1;
+        // stage 6.
+      }) & tbb::make_filter<int, void>(tbb::filter::serial, [&ipCnt](auto cnt) { ipCnt += cnt; }));
 
   EXPECT_GE(LRUC_SIZE, lruc.size()) << "cache.size() result not match";
   ASSERT_EQ(LRUC_SIZE, ipCnt) << "IP count not match";

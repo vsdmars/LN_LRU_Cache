@@ -1,11 +1,11 @@
 #pragma once
 
-#include "IpAddress.h"
+#include <ats_type.h>
 
-// Boost lib header
-#include <boost/functional/hash.hpp>
 // intel TBB header
 #include <tbb/concurrent_hash_map.h>
+// Boost lib header
+#include <boost/functional/hash.hpp>
 
 namespace tbb {
 using IpAddress = AtsPluginUtils::IpAddress;
@@ -76,4 +76,4 @@ struct tbb_hash_compare<IpAddress> {
   }
 };
 
-} // namespace tbb
+}  // namespace tbb

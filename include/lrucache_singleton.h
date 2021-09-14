@@ -23,9 +23,8 @@
  */
 #pragma once
 
-#include "IpAddress.h"
-#include "lrucache_tbb.h"
-#include "scale-lrucache.h"
+#include <lrucache_tbb.h>
+#include <scale-lrucache.h>
 
 namespace AtsPluginUtils {
 inline namespace lrucache_v1 {
@@ -47,14 +46,13 @@ enum class CACHE_VALUE_TYPE {
 template <CACHE_VALUE_TYPE>
 struct CacheValue;
 
-template<>
+template <>
 struct CacheValue<CACHE_VALUE_TYPE::TIME_ENTITY_LOOKUP_INFO> {
   int64_t expiryTs;
   int denialInfoCode;
 
   CacheValue() = default;
-  CacheValue(int64_t ts, int infoCode = 0): expiryTs(ts), denialInfoCode(infoCode) {
-  }
+  CacheValue(int64_t ts, int infoCode = 0) : expiryTs(ts), denialInfoCode(infoCode) {}
 };
 
 /**
@@ -65,12 +63,10 @@ struct CacheValue<CACHE_VALUE_TYPE::TIME_ENTITY_LOOKUP_INFO> {
  * value: AtsPluginUtils::CacheValue<CACHE_VALUE_TYPE::TIME_ENTITY_LOOKUP_INFO>
  *
  */
-using IPTimeEntityCache = LRUC::ScalableLRUCache <
-                          IpAddress,
-                          CacheValue<CACHE_VALUE_TYPE::TIME_ENTITY_LOOKUP_INFO >>;
+using IPTimeEntityCache = LRUC::ScalableLRUCache<IpAddress, CacheValue<CACHE_VALUE_TYPE::TIME_ENTITY_LOOKUP_INFO>>;
 
-} // namespace lrucache_v1
-} // namespace AtsPluginUtils
+}  // namespace lrucache_v1
+}  // namespace AtsPluginUtils
 
 /**
  * init_ip_time_entity_cache initializes the singleton instance of LRUCache with type:

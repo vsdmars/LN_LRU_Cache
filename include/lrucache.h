@@ -4,12 +4,13 @@
 
 #pragma once
 
+#include <tbb/concurrent_hash_map.h>
+
 #include <atomic>
 #include <mutex>
 #include <new>
 #include <thread>
 #include <vector>
-#include <tbb/concurrent_hash_map.h>
 
 namespace LRUC {
 
@@ -60,7 +61,7 @@ namespace LRUC {
 
 template <typename TKey, typename TValue, typename THash = tbb::tbb_hash_compare<TKey>>
 class LRUCache final {
- private:
+private:
   struct Value;
   using HashMap = tbb::concurrent_hash_map<TKey, Value, THash>;
   using HashMapConstAccessor = typename HashMap::const_accessor;
@@ -68,12 +69,12 @@ class LRUCache final {
   using HashMapValuePair = typename HashMap::value_type;
   using ListMutex = std::mutex;
 
- private:
+private:
   struct ListNode;
   // used for judging a node exist inside the double-linked list.
   static ListNode* const NullNodePtr;
 
- private:
+private:
   /**
    * ListNode is the element type forms the internal double-linked list,
    * which serves as the LRU cache eviction manipulator.
@@ -90,9 +91,7 @@ class LRUCache final {
     explicit constexpr ListNode(const TKey& key) : key_(key), prev_(NullNodePtr), next_(nullptr) {}
 
     // return false if node is not in cache's double-linked list.
-    constexpr bool inList() const {
-      return prev_ != NullNodePtr;
-    }
+    constexpr bool inList() const { return prev_ != NullNodePtr; }
   };
 
   /**
@@ -109,7 +108,7 @@ class LRUCache final {
     constexpr Value(const TValue& value, ListNode* node) : value_(value), listNode_(node) {}
   };
 
- private:
+private:
   /**
    * intel TBB concurrent_hash_map
    */
@@ -134,7 +133,7 @@ class LRUCache final {
    */
   size_t cache_size_;
 
- private:
+private:
   /**
    * Append a node to the double-linked list as the most-recently used.
    * Not thread-safe. Caller is responsible for a lock.
@@ -153,7 +152,7 @@ class LRUCache final {
    */
   void popFront();
 
- public:
+public:
   /**
    * Helper type wraped over tbb::concurrent_hash_map::const_accessor with
    * operator overloaded to retrieve value stored in the hash-table based on
@@ -162,35 +161,23 @@ class LRUCache final {
   struct ConstAccessor final {
     constexpr ConstAccessor() = default;
 
-    constexpr const TValue& operator*() const {
-      return *get();
-    }
+    constexpr const TValue& operator*() const { return *get(); }
 
-    constexpr const TValue* operator->() const {
-      return get();
-    }
+    constexpr const TValue* operator->() const { return get(); }
 
-    constexpr bool empty() const {
-      return hashAccessor_.empty();
-    }
+    constexpr bool empty() const { return hashAccessor_.empty(); }
 
-    constexpr const TValue* get() const {
-      return &value_;
-    }
+    constexpr const TValue* get() const { return &value_; }
 
-    constexpr void release() {
-      hashAccessor_.release();
-    }
+    constexpr void release() { hashAccessor_.release(); }
 
-   private:
+  private:
     /**
      * copy TValue from concurrent_hash_map thus caller could release lock early.
      */
-    void setValue() {
-      value_ = hashAccessor_->second.value_;
-    }
+    void setValue() { value_ = hashAccessor_->second.value_; }
 
-   private:
+  private:
     friend class LRUCache;  // for LRUCache member function to access tbb::concurrent_hash_map::const_accessor
     HashMapConstAccessor hashAccessor_;
     TValue value_;
@@ -205,9 +192,7 @@ class LRUCache final {
    */
   explicit LRUCache(size_t size, size_t bucketCount = std::thread::hardware_concurrency() * 4);
 
-  ~LRUCache() {
-    clear();
-  }
+  ~LRUCache() { clear(); }
 
   LRUCache(const LRUCache& other) = delete;
   LRUCache& operator=(const LRUCache&) = delete;
@@ -247,20 +232,16 @@ class LRUCache final {
   /**
    * Returns the number of elements in the container.
    */
-  size_t size() const {
-    return current_size_.load();
-  }
+  size_t size() const { return current_size_.load(); }
 
   /**
    * Returns LRUCache capacity
    */
-  constexpr size_t capacity() const {
-    return cache_size_;
-  }
+  constexpr size_t capacity() const { return cache_size_; }
 };
 
 template <class TKey, class TValue, class THash>
-typename LRUCache<TKey, TValue, THash>::ListNode* const LRUCache<TKey, TValue, THash>::NullNodePtr = (ListNode*) - 1;
+typename LRUCache<TKey, TValue, THash>::ListNode* const LRUCache<TKey, TValue, THash>::NullNodePtr = (ListNode*)-1;
 
 // ---- private member functions ----
 template <class TKey, class TValue, class THash>
@@ -311,14 +292,13 @@ void LRUCache<TKey, TValue, THash>::popFront() {
   }
 
   hash_map_.erase(constHashAccessor);
-
 }
 
 // ---- private member functions end ----
 
 template <class TKey, class TValue, class THash>
 LRUCache<TKey, TValue, THash>::LRUCache(size_t size, size_t bucketCount)
-  : hash_map_(bucketCount), current_size_(0), cache_size_(size) {
+    : hash_map_(bucketCount), current_size_(0), cache_size_(size) {
   head_.prev_ = nullptr;
   head_.next_ = &tail_;
   tail_.prev_ = &head_;
@@ -349,7 +329,6 @@ size_t LRUCache<TKey, TValue, THash>::erase(const TKey& key) {
       delete found_node;
     }
   }
-
 
   current_size_--;
 

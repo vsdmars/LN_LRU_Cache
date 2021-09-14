@@ -6,6 +6,12 @@
 
 #include <gtest/gtest.h>
 
+// intel TBB header
+#include <tbb/parallel_for_each.h>
+#include <tbb/pipeline.h>
+
+#include <LRUcacheSingleton.h>
+
 // posix header
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -20,12 +26,6 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-
-// intel TBB header
-#include <tbb/parallel_for_each.h>
-#include <tbb/pipeline.h>
-
-#include "LRUcacheSingleton.h"
 
 using namespace AtsPluginUtils;
 
@@ -80,9 +80,9 @@ auto create_cache_value = [](auto ts) -> CacheValue<CACHE_VALUE_TYPE::TIME_ENTIT
  *
  */
 auto generator(int from, int to) {
-  return [ = ] {
+  return [=] {
     decltype(from) i = from;
-    return [ = ]() mutable { return i < to ? i++ : -1; };
+    return [=]() mutable { return i < to ? i++ : -1; };
   }();
 }
 
@@ -173,4 +173,4 @@ void ipJob(T&& t, int bfrom, int bto, int cfrom, int cto, int dfrom, int dto, in
   }
 }
 
-} // namespace anonymous
+}  // namespace
