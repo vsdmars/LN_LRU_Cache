@@ -3,13 +3,12 @@
  */
 #pragma once
 
-#include "LRUcacheSingleton.h"
+#include <LRUcacheSingleton.h>
 
 using namespace AtsPluginUtils;
 
 using Value = CacheValue<CACHE_VALUE_TYPE::TIME_ENTITY_LOOKUP_INFO>;
 constexpr auto magic_cache_size = 42;
-
 
 void init_cache1();
 void cache1_insert(IpAddress key, Value value);

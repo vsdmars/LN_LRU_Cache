@@ -1,6 +1,6 @@
 #include <benchmark/benchmark.h>
 
-#include "common_test.h"
+#include <common_test.h>
 
 using IPVec = std::vector<std::tuple<IpAddress, TimedEntityLookupInfo>>;
 // will be init. inside the benchmark functions.
@@ -340,13 +340,11 @@ static void BM_LRUCacheConcurrentFindInsertErase_2(benchmark::State& state) {
     auto idx1 = pick(gen);
     state.ResumeTiming();
 
-    switch(state.iterations() % 3) {
-      case 0:
-        {
-          IPLRUCache::ConstAccessor ca{};
-          lruc->find(ca, std::get<0>((*randomIPs)[idx1]));
-        }
-        break;
+    switch (state.iterations() % 3) {
+      case 0: {
+        IPLRUCache::ConstAccessor ca{};
+        lruc->find(ca, std::get<0>((*randomIPs)[idx1]));
+      } break;
       case 1:
         lruc->insert(std::get<0>((*randomIPs)[idx1]), std::get<1>((*randomIPs)[idx1]));
         break;
@@ -361,7 +359,8 @@ static void BM_LRUCacheConcurrentFindInsertErase_2(benchmark::State& state) {
     delete lruc;
   }
 }
-BENCHMARK(BM_LRUCacheConcurrentFindInsertErase_2)->Name("[concurrent] Find/Insert/Erase in different Thread")->Threads(tcnt);
-
+BENCHMARK(BM_LRUCacheConcurrentFindInsertErase_2)
+    ->Name("[concurrent] Find/Insert/Erase in different Thread")
+    ->Threads(tcnt);
 
 BENCHMARK_MAIN();
