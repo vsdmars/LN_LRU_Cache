@@ -2,8 +2,7 @@
 =====
 
 .. All external links are here
-.. _lrucache: https://github.com/vsdmars/LN_LRU_Cache
-.. image: https://github.com/vsdmars/LN_LRU_Cache/actions/workflows/lruc_action.yaml/badge.svg?branch=master
+.. image:: https://github.com/vsdmars/LN_LRU_Cache/actions/workflows/lruc_action.yaml/badge.svg?branch=master
   :target: https://github.com/vsdmars/LN_LRU_Cache/actions/workflows/lruc_action.yaml
 .. _intel-tbb: https://github.com/oneapi-src/oneTBB
 .. ;; And now we continue with the actual content
@@ -27,6 +26,7 @@ Examples
     }
 
 .. code:: c++
+
     using MyCache = LRUC::LRUCache<int, string>;
 
     auto main(int argc, char* argv[]) -> int {
@@ -48,6 +48,7 @@ Examples
 
 
 .. code:: c++
+
     using MyCache = LRUC::ScalableLRUCache<int, string>;
 
     auto main(int argc, char* argv[]) -> int {
