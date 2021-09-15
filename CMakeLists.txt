@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
+
 # enable unit test
 # https://stackoverflow.com/a/30264765
 enable_testing()
