@@ -19,10 +19,15 @@ LRUCache and Scaled LRUCache
 Concurrent LRUCache provides thread-safe access with defined size limit.
 
 find() : concurrent access to cache with specified key and returns value.
+
 insert() : insert key with value.
+
 erase() : evict cache with specified key.
+
 capacity() : capacity of the cache.
+
 size() : current cache size.
+
 clear() : evict all cache entries.
 
 For heavy concurrent insert/evict load, scaled-lru cache is provided.
