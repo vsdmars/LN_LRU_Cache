@@ -35,7 +35,7 @@ For heavy concurrent insert/evict load, scaled-lru cache is provided.
 
 Examples
 --------
-**LRU Cache**
+**LRU Cache** (`run <https://godbolt.org/z/Y6he8z9Gf>`_)
 
 .. code:: c++
 
@@ -54,8 +54,13 @@ Examples
         lruc.insert(6, "Soon :-)");
 
         MyCache::ConstAccessor ca;
-        if (lruc.find(ca, 1)) {
+        if (lruc.find(ca, 5)) {
             std::cout << *ca << std::endl;
+        }
+
+        lruc.erase(2);
+        if (!lruc.find(ca, 2)) {
+            std::cout << "2 is gone." << std::endl;
         }
     }
 
