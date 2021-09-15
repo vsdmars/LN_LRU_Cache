@@ -47,7 +47,7 @@ TEST_F(ScaleLRUCache2MTest, TestSingleThread) {
   ASSERT_GE(LRUC_SIZE, lruc.size()) << "cache.size() is greater than init. cache size!";
   ASSERT_EQ(LRUC_SIZE, lruc.capacity()) << "cache.capacity() result not match";
 
-  for (int i = 0; i < lruc.shardCount(); i++) {
+  for (auto i = 0; i < lruc.shardCount(); i++) {
     std::cout << "Shard[" << i << "] size: [" << lruc.size(i) << "]\n" << std::flush;
   }
 

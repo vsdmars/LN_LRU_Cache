@@ -131,7 +131,7 @@ private:
   /**
    * LRUCache size.
    */
-  size_t cache_size_;
+  const size_t cache_size_;
 
 private:
   /**

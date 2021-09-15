@@ -18,7 +18,7 @@ private:
 
   std::vector<ShardPtr> shards_;
   // ScalableLRUCache size.
-  size_t cache_size_;
+  const size_t cache_size_;
   // shard count
   size_t shard_count_;
 

@@ -13,15 +13,6 @@ using std::string;
 
 namespace AtsPluginUtils {
 
-// Value, code from traffic team
-struct TimedEntityLookupInfo {
-  long long int expiryTs;
-  int denialInfoCode;
-
-  TimedEntityLookupInfo() = default;
-  TimedEntityLookupInfo(long long int ts, int f = 0) : expiryTs(ts), denialInfoCode(f) {}
-};
-
 // Key, code from traffic team
 struct IpAddress {
   union {

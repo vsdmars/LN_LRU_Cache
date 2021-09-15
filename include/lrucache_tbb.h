@@ -60,20 +60,7 @@ struct tbb_hash_compare<IpAddress> {
     return seed;
   }
 
-  static bool equal(const IpAddress& k1, const IpAddress& k2) {
-    if (k1.base.sa_family != k2.base.sa_family) {
-      return false;
-    }
-
-    switch (k1.base.sa_family) {
-      case AF_INET:
-        return k1.v4.sin_addr.s_addr == k2.v4.sin_addr.s_addr;
-      case AF_INET6:
-        return memcmp(k1.v6.sin6_addr.s6_addr, k2.v6.sin6_addr.s6_addr, 16) == 0;
-    }
-
-    return false;
-  }
+  static bool equal(const IpAddress& k1, const IpAddress& k2) { return k1 == k2; }
 };
 
 }  // namespace tbb

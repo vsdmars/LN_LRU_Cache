@@ -10,15 +10,12 @@ using IPVec = std::vector<std::tuple<IpAddress, CacheValue<CACHE_VALUE_TYPE::TIM
 SCALE_IPLRUCache* slruc;
 IPVec* randomIPs;
 
-// init. random device.
-std::random_device rd{};
-std::mt19937 gen{rd()};
-
 // thread count (depends on hardware)
 constexpr size_t tcnt = 16;
 
 /**
  * Benchmark for ScalableLRUCache find and insert in each thread.
+ *
  */
 static void BM_ScalableLRUCacheConcurrentFindInsert_1(benchmark::State& state) {
   // keep those const variables inside the function and make it as constexpr
@@ -30,8 +27,13 @@ static void BM_ScalableLRUCacheConcurrentFindInsert_1(benchmark::State& state) {
   constexpr int dfrom{0};
   constexpr int dto{255};
   constexpr int EXPIRYTS{42};
+
+  // init. random device.
+  std::random_device rd{};
+  std::mt19937 gen{rd()};
+
   // uniform distribution device
-  std::uniform_int_distribution<> pick{0, LRUC_SIZE - 1};
+  std::uniform_int_distribution<size_t> pick{0, LRUC_SIZE - 1};
 
   // init. benchmark suite variables.
   if (state.thread_index == 0) {
@@ -43,8 +45,8 @@ static void BM_ScalableLRUCacheConcurrentFindInsert_1(benchmark::State& state) {
 
   for (auto _ : state) {
     state.PauseTiming();
-    auto idx1 = pick(gen);
-    auto idx2 = pick(gen);
+    size_t idx1 = pick(gen);
+    size_t idx2 = pick(gen);
     state.ResumeTiming();
 
     SCALE_IPLRUCache::ConstAccessor ca;
@@ -64,6 +66,7 @@ BENCHMARK(BM_ScalableLRUCacheConcurrentFindInsert_1)
 
 /**
  * Benchmark for ScalableLRUCache find and insert in different thread.
+ *
  */
 static void BM_ScalableLRUCacheConcurrentFindInsert_2(benchmark::State& state) {
   // keep those const variables inside the function and make it as constexpr
@@ -75,8 +78,12 @@ static void BM_ScalableLRUCacheConcurrentFindInsert_2(benchmark::State& state) {
   constexpr int dfrom{0};
   constexpr int dto{255};
   constexpr int EXPIRYTS{42};
+
+  // init. random device.
+  std::random_device rd{};
+  std::mt19937 gen{rd()};
   // uniform distribution device
-  std::uniform_int_distribution<> pick{0, LRUC_SIZE - 1};
+  std::uniform_int_distribution<size_t> pick{0, LRUC_SIZE - 1};
 
   // init. benchmark suite variables.
   if (state.thread_index == 0) {
@@ -88,7 +95,7 @@ static void BM_ScalableLRUCacheConcurrentFindInsert_2(benchmark::State& state) {
 
   for (auto _ : state) {
     state.PauseTiming();
-    auto idx1 = pick(gen);
+    size_t idx1 = pick(gen);
     state.ResumeTiming();
 
     if (state.iterations() % 2) {
@@ -111,6 +118,7 @@ BENCHMARK(BM_ScalableLRUCacheConcurrentFindInsert_2)
 
 /**
  * Benchmark for ScalableLRUCache find in different thread.
+ *
  */
 static void BM_ScalableLRUCacheConcurrentFind_1(benchmark::State& state) {
   // keep those const variables inside the function and make it as constexpr
@@ -122,8 +130,12 @@ static void BM_ScalableLRUCacheConcurrentFind_1(benchmark::State& state) {
   constexpr int dfrom{0};
   constexpr int dto{255};
   constexpr int EXPIRYTS{42};
+
+  // init. random device.
+  std::random_device rd{};
+  std::mt19937 gen{rd()};
   // uniform distribution device
-  std::uniform_int_distribution<> pick{0, LRUC_SIZE - 1};
+  std::uniform_int_distribution<size_t> pick{0, LRUC_SIZE - 1};
 
   // init. benchmark suite variables.
   if (state.thread_index == 0) {
@@ -135,7 +147,7 @@ static void BM_ScalableLRUCacheConcurrentFind_1(benchmark::State& state) {
 
   for (auto _ : state) {
     state.PauseTiming();
-    auto idx1 = pick(gen);
+    size_t idx1 = pick(gen);
     state.ResumeTiming();
 
     IPLRUCache::ConstAccessor ca;
@@ -154,6 +166,7 @@ BENCHMARK(BM_ScalableLRUCacheConcurrentFind_1)
 
 /**
  * Benchmark for ScalableLRUCache insert in different thread.
+ *
  */
 static void BM_ScalableLRUCacheConcurrentInsert_1(benchmark::State& state) {
   // keep those const variables inside the function and make it as constexpr
@@ -165,8 +178,12 @@ static void BM_ScalableLRUCacheConcurrentInsert_1(benchmark::State& state) {
   constexpr int dfrom{0};
   constexpr int dto{255};
   constexpr int EXPIRYTS{42};
+
+  // init. random device.
+  std::random_device rd{};
+  std::mt19937 gen{rd()};
   // uniform distribution device
-  std::uniform_int_distribution<> pick{0, LRUC_SIZE - 1};
+  std::uniform_int_distribution<size_t> pick{0, LRUC_SIZE - 1};
 
   // init. benchmark suite variables.
   if (state.thread_index == 0) {
@@ -178,7 +195,7 @@ static void BM_ScalableLRUCacheConcurrentInsert_1(benchmark::State& state) {
 
   for (auto _ : state) {
     state.PauseTiming();
-    auto idx1 = pick(gen);
+    size_t idx1 = pick(gen);
     state.ResumeTiming();
 
     slruc->insert(std::get<0>((*randomIPs)[idx1]), std::get<1>((*randomIPs)[idx1]));
@@ -196,6 +213,7 @@ BENCHMARK(BM_ScalableLRUCacheConcurrentInsert_1)
 
 /**
  * Benchmark for ScalableLRUCache insert in sequential.
+ *
  */
 static void BM_ScalableLRUCacheInsert_1(benchmark::State& state) {
   // keep those const variables inside the function and make it as constexpr
@@ -207,8 +225,12 @@ static void BM_ScalableLRUCacheInsert_1(benchmark::State& state) {
   constexpr int dfrom{0};
   constexpr int dto{255};
   constexpr int EXPIRYTS{42};
+
+  // init. random device.
+  std::random_device rd{};
+  std::mt19937 gen{rd()};
   // uniform distribution device
-  std::uniform_int_distribution<> pick{0, LRUC_SIZE - 1};
+  std::uniform_int_distribution<size_t> pick{0, LRUC_SIZE - 1};
 
   // init. benchmark suite variables.
   if (state.thread_index == 0) {
@@ -220,7 +242,7 @@ static void BM_ScalableLRUCacheInsert_1(benchmark::State& state) {
 
   for (auto _ : state) {
     state.PauseTiming();
-    auto idx1 = pick(gen);
+    size_t idx1 = pick(gen);
     state.ResumeTiming();
 
     slruc->insert(std::get<0>((*randomIPs)[idx1]), std::get<1>((*randomIPs)[idx1]));
@@ -236,6 +258,7 @@ BENCHMARK(BM_ScalableLRUCacheInsert_1)->Name("Scalable LRU Cacue Insert in seque
 
 /**
  * Benchmark for ScalableLRUCache find in sequential.
+ *
  */
 static void BM_ScalableLRUCacheFind_1(benchmark::State& state) {
   // keep those const variables inside the function and make it as constexpr
@@ -247,8 +270,12 @@ static void BM_ScalableLRUCacheFind_1(benchmark::State& state) {
   constexpr int dfrom{0};
   constexpr int dto{255};
   constexpr int EXPIRYTS{42};
+
+  // init. random device.
+  std::random_device rd{};
+  std::mt19937 gen{rd()};
   // uniform distribution device
-  std::uniform_int_distribution<> pick{0, LRUC_SIZE - 1};
+  std::uniform_int_distribution<size_t> pick{0, LRUC_SIZE - 1};
 
   // init. benchmark suite variables.
   if (state.thread_index == 0) {
@@ -260,7 +287,7 @@ static void BM_ScalableLRUCacheFind_1(benchmark::State& state) {
 
   for (auto _ : state) {
     state.PauseTiming();
-    auto idx1 = pick(gen);
+    size_t idx1 = pick(gen);
     state.ResumeTiming();
 
     IPLRUCache::ConstAccessor ca;
@@ -277,6 +304,7 @@ BENCHMARK(BM_ScalableLRUCacheFind_1)->Name("Scalable LRU Cache Find in sequentia
 
 /**
  * Benchmark for ScalableLRUCache find/insert/erase in each thread.
+ *
  */
 static void BM_ScalableLRUCacheConcurrentFindInsertErase_1(benchmark::State& state) {
   // keep those const variables inside the function and make it as constexpr
@@ -288,21 +316,25 @@ static void BM_ScalableLRUCacheConcurrentFindInsertErase_1(benchmark::State& sta
   constexpr int dfrom{0};
   constexpr int dto{255};
   constexpr int EXPIRYTS{42};
+
+  // init. random device.
+  std::random_device rd{};
+  std::mt19937 gen{rd()};
   // uniform distribution device
-  std::uniform_int_distribution<> pick{0, LRUC_SIZE - 1};
+  std::uniform_int_distribution<size_t> pick{0, LRUC_SIZE - 1};
 
   // init. benchmark suite variables.
   if (state.thread_index == 0) {
     slruc = new SCALE_IPLRUCache{LRUC_SIZE};
-    randomIPs = new IPVec;
+    randomIPs = new IPVec{};
     // init. random ip vector
     ipJob(*randomIPs, bfrom, bto, cfrom, cto, dfrom, dto, EXPIRYTS);
   }
 
   for (auto _ : state) {
     state.PauseTiming();
-    auto idx1 = pick(gen);
-    auto idx2 = pick(gen);
+    size_t idx1 = pick(gen);
+    size_t idx2 = pick(gen);
     state.ResumeTiming();
 
     SCALE_IPLRUCache::ConstAccessor ca;
@@ -323,6 +355,7 @@ BENCHMARK(BM_ScalableLRUCacheConcurrentFindInsertErase_1)
 
 /**
  * Benchmark for ScalableLRUCache find/insert/erase in different thread.
+ *
  */
 static void BM_ScalableLRUCacheConcurrentFindInsertErase_2(benchmark::State& state) {
   // keep those const variables inside the function and make it as constexpr
@@ -334,8 +367,12 @@ static void BM_ScalableLRUCacheConcurrentFindInsertErase_2(benchmark::State& sta
   constexpr int dfrom{0};
   constexpr int dto{255};
   constexpr int EXPIRYTS{42};
+
+  // init. random device.
+  std::random_device rd{};
+  std::mt19937 gen{rd()};
   // uniform distribution device
-  std::uniform_int_distribution<> pick{0, LRUC_SIZE - 1};
+  std::uniform_int_distribution<size_t> pick{0, LRUC_SIZE - 1};
 
   // init. benchmark suite variables.
   if (state.thread_index == 0) {
@@ -347,7 +384,7 @@ static void BM_ScalableLRUCacheConcurrentFindInsertErase_2(benchmark::State& sta
 
   for (auto _ : state) {
     state.PauseTiming();
-    auto idx1 = pick(gen);
+    size_t idx1 = pick(gen);
     state.ResumeTiming();
 
     switch (state.iterations() % 3) {

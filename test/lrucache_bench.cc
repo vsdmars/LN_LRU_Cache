@@ -10,10 +10,6 @@ using IPVec = std::vector<std::tuple<IpAddress, CacheValue<CACHE_VALUE_TYPE::TIM
 IPLRUCache* lruc;
 IPVec* randomIPs;
 
-// init. random device.
-std::random_device rd{};
-std::mt19937 gen{rd()};
-
 // thread count (depends on hardware)
 constexpr size_t tcnt = 16;
 
@@ -30,8 +26,13 @@ static void BM_LRUCacheConcurrentFindInsert_1(benchmark::State& state) {
   constexpr int dfrom{0};
   constexpr int dto{255};
   constexpr int EXPIRYTS{42};
+
+  // init. random device.
+  std::random_device rd{};
+  std::mt19937 gen{rd()};
+
   // uniform distribution device
-  std::uniform_int_distribution<> pick{0, LRUC_SIZE - 1};
+  std::uniform_int_distribution<size_t> pick{0, LRUC_SIZE - 1};
 
   // init. benchmark suite variables.
   if (state.thread_index == 0) {
@@ -73,8 +74,12 @@ static void BM_LRUCacheConcurrentFindInsert_2(benchmark::State& state) {
   constexpr int dfrom{0};
   constexpr int dto{255};
   constexpr int EXPIRYTS{42};
+
+  // init. random device.
+  std::random_device rd{};
+  std::mt19937 gen{rd()};
   // uniform distribution device
-  std::uniform_int_distribution<> pick{0, LRUC_SIZE - 1};
+  std::uniform_int_distribution<size_t> pick{0, LRUC_SIZE - 1};
 
   // init. benchmark suite variables.
   if (state.thread_index == 0) {
@@ -118,8 +123,12 @@ static void BM_LRUCacheConcurrentFind_1(benchmark::State& state) {
   constexpr int dfrom{0};
   constexpr int dto{255};
   constexpr int EXPIRYTS{42};
+
+  // init. random device.
+  std::random_device rd{};
+  std::mt19937 gen{rd()};
   // uniform distribution device
-  std::uniform_int_distribution<> pick{0, LRUC_SIZE - 1};
+  std::uniform_int_distribution<size_t> pick{0, LRUC_SIZE - 1};
 
   // init. benchmark suite variables.
   if (state.thread_index == 0) {
@@ -159,8 +168,12 @@ static void BM_LRUCacheConcurrentInsert_1(benchmark::State& state) {
   constexpr int dfrom{0};
   constexpr int dto{255};
   constexpr int EXPIRYTS{42};
+
+  // init. random device.
+  std::random_device rd{};
+  std::mt19937 gen{rd()};
   // uniform distribution device
-  std::uniform_int_distribution<> pick{0, LRUC_SIZE - 1};
+  std::uniform_int_distribution<size_t> pick{0, LRUC_SIZE - 1};
 
   // init. benchmark suite variables.
   if (state.thread_index == 0) {
@@ -199,8 +212,12 @@ static void BM_LRUCacheInsert_1(benchmark::State& state) {
   constexpr int dfrom{0};
   constexpr int dto{255};
   constexpr int EXPIRYTS{42};
+
+  // init. random device.
+  std::random_device rd{};
+  std::mt19937 gen{rd()};
   // uniform distribution device
-  std::uniform_int_distribution<> pick{0, LRUC_SIZE - 1};
+  std::uniform_int_distribution<size_t> pick{0, LRUC_SIZE - 1};
 
   // init. benchmark suite variables.
   if (state.thread_index == 0) {
@@ -239,8 +256,12 @@ static void BM_LRUCacheFind_1(benchmark::State& state) {
   constexpr int dfrom{0};
   constexpr int dto{255};
   constexpr int EXPIRYTS{42};
+
+  // init. random device.
+  std::random_device rd{};
+  std::mt19937 gen{rd()};
   // uniform distribution device
-  std::uniform_int_distribution<> pick{0, LRUC_SIZE - 1};
+  std::uniform_int_distribution<size_t> pick{0, LRUC_SIZE - 1};
 
   // init. benchmark suite variables.
   if (state.thread_index == 0) {
@@ -280,8 +301,12 @@ static void BM_LRUCacheConcurrentFindInsertErase_1(benchmark::State& state) {
   constexpr int dfrom{0};
   constexpr int dto{255};
   constexpr int EXPIRYTS{42};
+
+  // init. random device.
+  std::random_device rd{};
+  std::mt19937 gen{rd()};
   // uniform distribution device
-  std::uniform_int_distribution<> pick{0, LRUC_SIZE - 1};
+  std::uniform_int_distribution<size_t> pick{0, LRUC_SIZE - 1};
 
   // init. benchmark suite variables.
   if (state.thread_index == 0) {
@@ -327,8 +352,12 @@ static void BM_LRUCacheConcurrentFindInsertErase_2(benchmark::State& state) {
   constexpr int dfrom{0};
   constexpr int dto{255};
   constexpr int EXPIRYTS{42};
+
+  // init. random device.
+  std::random_device rd{};
+  std::mt19937 gen{rd()};
   // uniform distribution device
-  std::uniform_int_distribution<> pick{0, LRUC_SIZE - 1};
+  std::uniform_int_distribution<size_t> pick{0, LRUC_SIZE - 1};
 
   // init. benchmark suite variables.
   if (state.thread_index == 0) {
