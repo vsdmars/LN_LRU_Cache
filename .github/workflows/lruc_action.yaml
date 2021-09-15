@@ -1,8 +1,4 @@
 name: LRU cache tests
-env:
-    # Indicates the CMake build directory where project files and binaries are being produced.
-    CMAKE_BUILD_DIR: ${{ github.workspace }}/builddir/
-    ASAN_OPTIONS: fast_unwind_on_malloc=0
 on:
   push:
       branches:
@@ -10,6 +6,11 @@ on:
 jobs: # job is the container
   UNITTEST-Actions:
     runs-on: ubuntu-latest
+    env:
+        # Indicates the CMake build directory where project files and binaries are being produced.
+        CMAKE_BUILD_DIR: ${{ github.workspace }}/builddir/
+        ASAN_OPTIONS: fast_unwind_on_malloc=0
+        ASAN_OPTIONS: exitcode=0
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
@@ -36,19 +37,5 @@ jobs: # job is the container
       - name: make
         run: cd build && ninja -v
       - name: ctest
-        run: cd build/test_bin && ./lruc_test
-      - run: echo "🍏 This job's status is ${{ job.status }}."
-  BENCHMARK-Actions:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
-      - name: Check out repository code
-        uses: actions/checkout@v2
-      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-      - name: List files in the repository
-        run: |
-          ls ${{ github.workspace }}
+        run: cd build/test_bin && ./lruc_test && ./sclae_lruc_test
       - run: echo "🍏 This job's status is ${{ job.status }}."
