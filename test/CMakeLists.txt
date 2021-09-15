@@ -27,7 +27,7 @@ add_test(NAME lrucache_unit_test COMMAND lruc_test)
 
 
 # -- Scale-LRUCache unit test --
-SET(SCALE_LRUCACHE_TEST sclae_lruc_test)
+SET(SCALE_LRUCACHE_TEST scale_lruc_test)
 SET(SCALE_LRUCACHE_TEST_SRC "ScaleLRUcacheTest.cc")
 add_executable(${SCALE_LRUCACHE_TEST} ${SCALE_LRUCACHE_TEST_SRC})
 
@@ -39,7 +39,7 @@ target_include_directories(${SCALE_LRUCACHE_TEST} PRIVATE "${CMAKE_SOURCE_DIR}/i
 target_link_libraries(${SCALE_LRUCACHE_TEST} PRIVATE TBB::tbb)
 target_link_libraries(${SCALE_LRUCACHE_TEST} PRIVATE GTest::gtest_main)
 # gtest_discover_tests(${SCALE_LRUCACHE_TEST})
-add_test(NAME scale_lrucache_unit_test COMMAND sclae_lruc_test)
+add_test(NAME scale_lrucache_unit_test COMMAND scale_lruc_test)
 
 
 # # -- LRUCache benchmark test --
