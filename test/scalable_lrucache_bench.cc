@@ -61,7 +61,7 @@ static void BM_ScalableLRUCacheConcurrentFindInsert_1(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_ScalableLRUCacheConcurrentFindInsert_1)
-    ->Name("[concurrent] Scalable LRU Cache Find/Insert in each Thread")
+    // ->Name("[concurrent] Scalable LRU Cache Find/Insert in each Thread")
     ->Threads(tcnt);
 
 /**
@@ -113,7 +113,7 @@ static void BM_ScalableLRUCacheConcurrentFindInsert_2(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_ScalableLRUCacheConcurrentFindInsert_2)
-    ->Name("[concurrent] Scalable LRU Cache Find/Insert in different Thread")
+    // ->Name("[concurrent] Scalable LRU Cache Find/Insert in different Thread")
     ->Threads(tcnt);
 
 /**
@@ -161,7 +161,7 @@ static void BM_ScalableLRUCacheConcurrentFind_1(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_ScalableLRUCacheConcurrentFind_1)
-    ->Name("[concurrent] Scalable LRU Cache Find in different Thread")
+    // ->Name("[concurrent] Scalable LRU Cache Find in different Thread")
     ->Threads(tcnt);
 
 /**
@@ -208,7 +208,7 @@ static void BM_ScalableLRUCacheConcurrentInsert_1(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_ScalableLRUCacheConcurrentInsert_1)
-    ->Name("[concurrent] Scalable LRU Cache Insert in different Thread")
+    // ->Name("[concurrent] Scalable LRU Cache Insert in different Thread")
     ->Threads(tcnt);
 
 /**
@@ -254,7 +254,8 @@ static void BM_ScalableLRUCacheInsert_1(benchmark::State& state) {
     delete slruc;
   }
 }
-BENCHMARK(BM_ScalableLRUCacheInsert_1)->Name("Scalable LRU Cacue Insert in sequential");
+// BENCHMARK(BM_ScalableLRUCacheInsert_1)->Name("Scalable LRU Cacue Insert in sequential");
+BENCHMARK(BM_ScalableLRUCacheInsert_1);
 
 /**
  * Benchmark for ScalableLRUCache find in sequential.
@@ -300,7 +301,8 @@ static void BM_ScalableLRUCacheFind_1(benchmark::State& state) {
     delete slruc;
   }
 }
-BENCHMARK(BM_ScalableLRUCacheFind_1)->Name("Scalable LRU Cache Find in sequential");
+// BENCHMARK(BM_ScalableLRUCacheFind_1)->Name("Scalable LRU Cache Find in sequential");
+BENCHMARK(BM_ScalableLRUCacheFind_1);
 
 /**
  * Benchmark for ScalableLRUCache find/insert/erase in each thread.
@@ -350,7 +352,7 @@ static void BM_ScalableLRUCacheConcurrentFindInsertErase_1(benchmark::State& sta
   }
 }
 BENCHMARK(BM_ScalableLRUCacheConcurrentFindInsertErase_1)
-    ->Name("[concurrent] Scalable LRU Cache Find/Insert/Erase in each Thread")
+    // ->Name("[concurrent] Scalable LRU Cache Find/Insert/Erase in each Thread")
     ->Threads(tcnt);
 
 /**
@@ -407,7 +409,7 @@ static void BM_ScalableLRUCacheConcurrentFindInsertErase_2(benchmark::State& sta
   }
 }
 BENCHMARK(BM_ScalableLRUCacheConcurrentFindInsertErase_2)
-    ->Name("[concurrent] Scalable LRU Cache Find/Insert/Erase in different Thread")
+    // ->Name("[concurrent] Scalable LRU Cache Find/Insert/Erase in different Thread")
     ->Threads(tcnt);
 
 BENCHMARK_MAIN();

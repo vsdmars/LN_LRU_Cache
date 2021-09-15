@@ -59,7 +59,8 @@ static void BM_LRUCacheConcurrentFindInsert_1(benchmark::State& state) {
     delete lruc;
   }
 }
-BENCHMARK(BM_LRUCacheConcurrentFindInsert_1)->Name("[concurrent] Find/Insert in each Thread")->Threads(tcnt);
+// BENCHMARK(BM_LRUCacheConcurrentFindInsert_1)->Name("[concurrent] Find/Insert in each Thread")->Threads(tcnt);
+BENCHMARK(BM_LRUCacheConcurrentFindInsert_1)->Threads(tcnt);
 
 /**
  * Benchmark for LRUCache find and insert in different thread.
@@ -108,7 +109,8 @@ static void BM_LRUCacheConcurrentFindInsert_2(benchmark::State& state) {
     delete lruc;
   }
 }
-BENCHMARK(BM_LRUCacheConcurrentFindInsert_2)->Name("[concurrent] Find/Insert in different Thread")->Threads(tcnt);
+// BENCHMARK(BM_LRUCacheConcurrentFindInsert_2)->Name("[concurrent] Find/Insert in different Thread")->Threads(tcnt);
+BENCHMARK(BM_LRUCacheConcurrentFindInsert_2)->Threads(tcnt);
 
 /**
  * Benchmark for LRUCache find in different thread.
@@ -153,7 +155,8 @@ static void BM_LRUCacheConcurrentFind_1(benchmark::State& state) {
     delete lruc;
   }
 }
-BENCHMARK(BM_LRUCacheConcurrentFind_1)->Name("[concurrent] Find in different Thread")->Threads(tcnt);
+// BENCHMARK(BM_LRUCacheConcurrentFind_1)->Name("[concurrent] Find in different Thread")->Threads(tcnt);
+BENCHMARK(BM_LRUCacheConcurrentFind_1)->Threads(tcnt);
 
 /**
  * Benchmark for LRUCache insert in different thread.
@@ -197,7 +200,8 @@ static void BM_LRUCacheConcurrentInsert_1(benchmark::State& state) {
     delete lruc;
   }
 }
-BENCHMARK(BM_LRUCacheConcurrentInsert_1)->Name("[concurrent] Insert in different Thread")->Threads(tcnt);
+// BENCHMARK(BM_LRUCacheConcurrentInsert_1)->Name("[concurrent] Insert in different Thread")->Threads(tcnt);
+BENCHMARK(BM_LRUCacheConcurrentInsert_1)->Threads(tcnt);
 
 /**
  * Benchmark for LRUCache insert in sequential.
@@ -241,7 +245,8 @@ static void BM_LRUCacheInsert_1(benchmark::State& state) {
     delete lruc;
   }
 }
-BENCHMARK(BM_LRUCacheInsert_1)->Name("Insert in sequential");
+// BENCHMARK(BM_LRUCacheInsert_1)->Name("Insert in sequential");
+BENCHMARK(BM_LRUCacheInsert_1);
 
 /**
  * Benchmark for LRUCache find in sequential.
@@ -286,7 +291,8 @@ static void BM_LRUCacheFind_1(benchmark::State& state) {
     delete lruc;
   }
 }
-BENCHMARK(BM_LRUCacheFind_1)->Name("Find in sequential");
+// BENCHMARK(BM_LRUCacheFind_1)->Name("Find in sequential");
+BENCHMARK(BM_LRUCacheFind_1);
 
 /**
  * Benchmark for LRUCache find/insert/erase in each thread.
@@ -337,7 +343,9 @@ static void BM_LRUCacheConcurrentFindInsertErase_1(benchmark::State& state) {
     delete lruc;
   }
 }
-BENCHMARK(BM_LRUCacheConcurrentFindInsertErase_1)->Name("[concurrent] Find/Insert/Erase in each Thread")->Threads(tcnt);
+// BENCHMARK(BM_LRUCacheConcurrentFindInsertErase_1)->Name("[concurrent] Find/Insert/Erase in each
+// Thread")->Threads(tcnt);
+BENCHMARK(BM_LRUCacheConcurrentFindInsertErase_1)->Threads(tcnt);
 
 /**
  * Benchmark for LRUCache find/insert/erase in different thread.
@@ -392,7 +400,7 @@ static void BM_LRUCacheConcurrentFindInsertErase_2(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_LRUCacheConcurrentFindInsertErase_2)
-    ->Name("[concurrent] Find/Insert/Erase in different Thread")
+    // ->Name("[concurrent] Find/Insert/Erase in different Thread")
     ->Threads(tcnt);
 
 BENCHMARK_MAIN();
