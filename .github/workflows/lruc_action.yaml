@@ -14,6 +14,8 @@ jobs: # job is the container
       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
       - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
       - uses: lukka/get-cmake@latest
+      - name: Install c++ boost library manually
+        run: sudo apt-get install libboost-all-dev
       - name: Install intel tbb manually
         run: sudo apt-get install -y libtbb-dev
       - name: Install google benchmark manually
