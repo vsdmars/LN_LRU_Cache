@@ -2,6 +2,7 @@ name: LRU cache tests
 env:
     # Indicates the CMake build directory where project files and binaries are being produced.
     CMAKE_BUILD_DIR: ${{ github.workspace }}/builddir/
+    ASAN_OPTIONS: fast_unwind_on_malloc=0
 on:
   push:
       branches:
@@ -35,7 +36,7 @@ jobs: # job is the container
       - name: make
         run: cd build && ninja -v
       - name: ctest
-        run: cd build/test_bin && export ASAN_OPTIONS=fast_unwind_on_malloc=0 ./lruc_test
+        run: cd build/test_bin && ./lruc_test
       - run: echo "🍏 This job's status is ${{ job.status }}."
   BENCHMARK-Actions:
     runs-on: ubuntu-latest
