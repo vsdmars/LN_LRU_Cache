@@ -31,7 +31,7 @@ protected:
 
 protected:
   void SetUp() override { ipJob(lruc, bfrom, bto, cfrom, cto, dfrom, dto, EXPIRYTS); }
-  void TearDown() override {}
+  void TearDown() override { lruc.clear(); }
 };
 
 /**

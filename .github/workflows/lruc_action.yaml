@@ -35,7 +35,7 @@ jobs: # job is the container
       - name: make
         run: cd build && ninja -v
       - name: ctest
-        run: cd build/test_bin && ./lruc_test
+        run: cd build/test_bin && export ASAN_OPTIONS=fast_unwind_on_malloc=0 ./lruc_test
       - run: echo "🍏 This job's status is ${{ job.status }}."
   BENCHMARK-Actions:
     runs-on: ubuntu-latest
