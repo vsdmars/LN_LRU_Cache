@@ -42,32 +42,32 @@ target_link_libraries(${SCALE_LRUCACHE_TEST} PRIVATE GTest::gtest_main)
 add_test(NAME scale_lrucache_unit_test COMMAND scale_lruc_test)
 
 
-# # -- LRUCache benchmark test --
-# SET(LRUCACHE_BENCH lruc_benchmark)
-# SET(LRUCACHE_BENCH_SRC "lrucache_bench.cc")
-# add_executable(${LRUCACHE_BENCH} ${LRUCACHE_BENCH_SRC})
+# -- LRUCache benchmark test --
+SET(LRUCACHE_BENCH lruc_benchmark)
+SET(LRUCACHE_BENCH_SRC "lrucache_bench.cc")
+add_executable(${LRUCACHE_BENCH} ${LRUCACHE_BENCH_SRC})
 
-# # compile/link options
-# target_compile_features(${LRUCACHE_BENCH} PRIVATE cxx_std_17)
-# target_compile_options(${LRUCACHE_BENCH} PRIVATE ${COMPILE_OPTION})
+# compile/link options
+target_compile_features(${LRUCACHE_BENCH} PRIVATE cxx_std_17)
+target_compile_options(${LRUCACHE_BENCH} PRIVATE ${COMPILE_OPTION})
 
-# target_include_directories(${LRUCACHE_BENCH} PRIVATE "${CMAKE_SOURCE_DIR}/include" ${CMAKE_CURRENT_SOURCE_DIR})
-# target_link_libraries(${LRUCACHE_BENCH} PRIVATE TBB::tbb)
-# target_link_libraries(${LRUCACHE_BENCH} PRIVATE benchmark::benchmark)
+target_include_directories(${LRUCACHE_BENCH} PRIVATE "${CMAKE_SOURCE_DIR}/include" ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(${LRUCACHE_BENCH} PRIVATE TBB::tbb)
+target_link_libraries(${LRUCACHE_BENCH} PRIVATE benchmark::benchmark)
 
 
-# # -- ScalableLRUCache benchmark test --
-# SET(SCALE_LRUCACHE_BENCH scale_lruc_benchmark)
-# SET(SCALABLE_LRUCACHE_BENCH_SRC "scalable_lrucache_bench.cc")
-# add_executable(${SCALE_LRUCACHE_BENCH} ${SCALABLE_LRUCACHE_BENCH_SRC})
+# -- ScalableLRUCache benchmark test --
+SET(SCALE_LRUCACHE_BENCH scale_lruc_benchmark)
+SET(SCALABLE_LRUCACHE_BENCH_SRC "scalable_lrucache_bench.cc")
+add_executable(${SCALE_LRUCACHE_BENCH} ${SCALABLE_LRUCACHE_BENCH_SRC})
 
-# # compile/link options
-# target_compile_features(${SCALE_LRUCACHE_BENCH} PRIVATE cxx_std_17)
-# target_compile_options(${SCALE_LRUCACHE_BENCH} PRIVATE ${COMPILE_OPTION})
+# compile/link options
+target_compile_features(${SCALE_LRUCACHE_BENCH} PRIVATE cxx_std_17)
+target_compile_options(${SCALE_LRUCACHE_BENCH} PRIVATE ${COMPILE_OPTION})
 
-# target_include_directories(${SCALE_LRUCACHE_BENCH} PRIVATE "${CMAKE_SOURCE_DIR}/include" ${CMAKE_CURRENT_SOURCE_DIR})
-# target_link_libraries(${SCALE_LRUCACHE_BENCH} PRIVATE TBB::tbb)
-# target_link_libraries(${SCALE_LRUCACHE_BENCH} PRIVATE benchmark::benchmark)
+target_include_directories(${SCALE_LRUCACHE_BENCH} PRIVATE "${CMAKE_SOURCE_DIR}/include" ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(${SCALE_LRUCACHE_BENCH} PRIVATE TBB::tbb)
+target_link_libraries(${SCALE_LRUCACHE_BENCH} PRIVATE benchmark::benchmark)
 
 
 # -- setup binary location --
@@ -77,8 +77,8 @@ set_property(TARGET ${LRUCACHE_TEST}
 set_property(TARGET ${SCALE_LRUCACHE_TEST}
     PROPERTY RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/test_bin")
 
-# set_property(TARGET ${LRUCACHE_BENCH}
-    # PROPERTY RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/test_bin")
+set_property(TARGET ${LRUCACHE_BENCH}
+    PROPERTY RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/test_bin")
 
-# set_property(TARGET ${SCALE_LRUCACHE_BENCH}
-    # PROPERTY RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/test_bin")
+set_property(TARGET ${SCALE_LRUCACHE_BENCH}
+    PROPERTY RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/test_bin")
