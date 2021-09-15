@@ -19,6 +19,14 @@ Examples
 --------
 
 .. code:: c++
+
+    #include <fmt/core.h>
+
+    int main() {
+      fmt::print("Hello, world!\n");
+    }
+
+.. code:: c++
     using MyCache = LRUC::LRUCache<int, string>;
 
     auto main(int argc, char* argv[]) -> int {
