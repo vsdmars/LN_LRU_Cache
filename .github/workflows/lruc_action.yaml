@@ -9,8 +9,7 @@ jobs: # job is the container
     env:
         # Indicates the CMake build directory where project files and binaries are being produced.
         CMAKE_BUILD_DIR: ${{ github.workspace }}/builddir/
-        ASAN_OPTIONS: fast_unwind_on_malloc=0
-        ASAN_OPTIONS: exitcode=0
+        ASAN_OPTIONS: fast_unwind_on_malloc=0:exitcode=0
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
