@@ -16,6 +16,8 @@ jobs: # job is the container
       - uses: lukka/get-cmake@latest
       - name: Install intel tbb manually
         run: sudo apt-get install -y libtbb-dev
+      - name: Install google benchmark manually
+        run: sudo apt install libbenchmark-dev
       - name: Install gtest manually
         run: sudo apt-get install libgtest-dev && cd /usr/src/gtest && sudo mkdir build && cd build && sudo cmake .. && sudo make && sudo cp ./lib/*.a /usr/lib && sudo ln -s /usr/lib/libgtest.a /usr/local/lib/libgtest.a && sudo ln -s /usr/lib/libgtest_main.a /usr/local/lib/libgtest_main.a
       - uses: actions/checkout@v1
