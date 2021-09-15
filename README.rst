@@ -15,7 +15,8 @@
 ----
 
 
-Example:
+Examples
+--------
 
 .. code:: c++
     using MyCache = LRUC::LRUCache<int, string>;
@@ -37,7 +38,6 @@ Example:
     }
 
 
-Scaled Cache example:
 
 .. code:: c++
     using MyCache = LRUC::ScalableLRUCache<int, string>;
@@ -58,9 +58,10 @@ Scaled Cache example:
         }
     }
 
+
 Requirements
 ------------
-`_intel-tbb`_ version 5 or later
+`intel-tbb`_ version 5 or later
 
 
 
