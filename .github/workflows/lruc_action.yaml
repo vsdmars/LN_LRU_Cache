@@ -16,7 +16,7 @@ jobs: # job is the container
       - name: get cmake
         uses: lukka/get-cmake@latest
       - name: Install gtest manually
-        run: sudo apt-get install libgtest-dev && cd /usr/src/gtest && sudo mkdir build && cd build && cmake -G Ninja .. && ninja -v && sudo cp ./lib/*.a /usr/lib && sudo ln -s /usr/lib/libgtest.a /usr/local/lib/libgtest.a && sudo ln -s /usr/lib/libgtest_main.a /usr/local/lib/libgtest_main.a
+        run: sudo apt-get install libgtest-dev && cd /usr/src/gtest && sudo mkdir build && cd build && cmake .. && make && sudo cp ./lib/*.a /usr/lib && sudo ln -s /usr/lib/libgtest.a /usr/local/lib/libgtest.a && sudo ln -s /usr/lib/libgtest_main.a /usr/local/lib/libgtest_main.a
       - uses: actions/checkout@v1
       - name: Check out repository code
         uses: actions/checkout@v2
