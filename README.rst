@@ -9,23 +9,32 @@
 
 ----
 
-**{Concurrent LRU Cache}** is an header only concurrent safe LRU cache implementation.
+**{Concurrent LRU Cache}** is an header only concurrent safe LRU cache supports generic types with
+    simple API.
 
 ----
+
+LRUCache and Scaled LRUCache
+----------------------------
+Concurrent LRUCache provides thread-safe access with defined size limit.
+
+find() : concurrent access to cache with specified key and returns value.
+insert() : insert key with value.
+erase() : evict cache with specified key.
+capacity() : capacity of the cache.
+size() : current cache size.
+clear() : evict all cache entries.
+
+For heavy concurrent insert/evict load, scaled-lru cache is provided.
 
 
 Examples
 --------
+**LRU Cache**
 
 .. code:: c++
 
-    #include <fmt/core.h>
-
-    int main() {
-      fmt::print("Hello, world!\n");
-    }
-
-.. code:: c++
+    #include <lrucache.h>
 
     using MyCache = LRUC::LRUCache<int, string>;
 
@@ -45,9 +54,11 @@ Examples
         }
     }
 
-
+**Scaled LRU Cache**
 
 .. code:: c++
+
+    #include <scale-lrucache.h>
 
     using MyCache = LRUC::ScalableLRUCache<int, string>;
 
