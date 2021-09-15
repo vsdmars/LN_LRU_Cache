@@ -9,8 +9,7 @@
 
 ----
 
-**{Concurrent LRU Cache}** is an header only concurrent safe LRU cache supports generic types with
-    simple API.
+**{Concurrent LRU Cache}** is an header only concurrent safe LRU cache supports generic types with simple API.
 
 ----
 
