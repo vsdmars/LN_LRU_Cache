@@ -108,7 +108,7 @@ private:
     std::shared_ptr<ListNode> listNode_;
 
     constexpr Value() = default;
-    constexpr Value(const TValue& value, ListNode* node) : value_(value), listNode_(node) {}
+    constexpr Value(const TValue& value, std::shared_ptr<ListNode> node) : value_(value), listNode_(node) {}
   };
 
 private:
@@ -374,16 +374,18 @@ bool LRUCache<TKey, TValue, THash>::find(ConstAccessor& caccessor, const TKey& k
 template <class TKey, class TValue, class THash>
 bool LRUCache<TKey, TValue, THash>::insert(const TKey& key, const TValue& value) {
   // create node with key through default new allocator.
-  ListNode* node = new ListNode{key};
+  std::shared_ptr<ListNode> node;
 
   {
     // release HashMapAccessor early
     HashMapAccessor hashAccessor;
-    HashMapValuePair hashMapValue(key, Value(value, node));
+    HashMapValuePair hashMapValue(key, Value{value, std::make_shared<ListNode>(key)});
     // hashMapValue is copied and memory allocated in concurrent_hash_map
     if (!hash_map_.insert(hashAccessor, hashMapValue)) {
       return false;
     }
+
+    node = hashMapValue.second.listNode_;
   }
 
   // While hits LRUCache capacity, evict one item from double-linked list.
@@ -400,7 +402,7 @@ bool LRUCache<TKey, TValue, THash>::insert(const TKey& key, const TValue& value)
     std::unique_lock<ListMutex> lock(listMutex_);
     // append if key hasn't been erased.
     if (!node->delete_flag) {
-      append(node);
+      append(node.get());
     }
   }
 
