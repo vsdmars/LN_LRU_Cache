@@ -6,6 +6,7 @@
 
 #include <tbb/concurrent_hash_map.h>
 #include <atomic>
+#include <memory>
 #include <mutex>
 #include <new>
 #include <thread>
@@ -79,15 +80,19 @@ class LRUCache final {
    * which serves as the LRU cache eviction manipulator.
    */
   struct ListNode final {
-    TKey key_;
     ListNode* prev_;
     ListNode* next_;
+
+    TKey key_;
+    // delete_flag is used for determining instance state. If true shall not do any linked list modification
+    // related to this instance.
+    bool delete_flag = false;
 
     constexpr ListNode() : prev_(NullNodePtr), next_(nullptr) {}
 
     // Avoid unintended conversions.
     // https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rc-explicit
-    explicit constexpr ListNode(const TKey& key) : key_(key), prev_(NullNodePtr), next_(nullptr) {}
+    explicit constexpr ListNode(const TKey& key) : prev_(NullNodePtr), next_(nullptr), key_(key) {}
 
     // return false if node is not in cache's double-linked list.
     constexpr bool inList() const {
@@ -103,7 +108,7 @@ class LRUCache final {
   struct Value final {
     // could use std::ref/std::cref for uncopyable type
     TValue value_;
-    ListNode* listNode_;
+    std::shared_ptr<ListNode> listNode_;
 
     constexpr Value() = default;
     constexpr Value(const TValue& value, ListNode* node) : value_(value), listNode_(node) {}
@@ -116,7 +121,7 @@ class LRUCache final {
   HashMap hash_map_;
 
   /**
-   * Current LRUCache size.
+   * current LRUCache size.
    */
   std::atomic<size_t> current_size_;
 
@@ -327,7 +332,7 @@ LRUCache<TKey, TValue, THash>::LRUCache(size_t size, size_t bucketCount)
 
 template <class TKey, class TValue, class THash>
 size_t LRUCache<TKey, TValue, THash>::erase(const TKey& key) {
-  ListNode* found_node;
+  std::shared_ptr<ListNode> found_node;
 
   // immutable read accessor
   HashMapConstAccessor hashAccessor{};
@@ -335,31 +340,32 @@ size_t LRUCache<TKey, TValue, THash>::erase(const TKey& key) {
     hashAccessor.release();  // release early
     return 0;
   } else {
+    // ref cnt ++, minus back when out of the scope.
     found_node = hashAccessor->second.listNode_;
     hashAccessor.release();  // release early
   }
-
-  // tbb::concurrent_hash_map.erase(key) by contract won't throw exception if key does not exist.
-  hash_map_.erase(key);
 
   {
     // Update double-linked list before update current_size_
     std::unique_lock<ListMutex> lock(listMutex_);
     if (found_node->inList()) {
-      unlink(found_node);
-      delete found_node;
+      unlink(found_node.get());
+
+      current_size_--;
     }
+
+    found_node->delete_flag = true;
   }
 
-
-  current_size_--;
+  // tbb::concurrent_hash_map.erase(key) by contract won't throw exception if key does not exist.
+  hash_map_.erase(key);
 
   return 1;
 }
 
 template <class TKey, class TValue, class THash>
 bool LRUCache<TKey, TValue, THash>::find(ConstAccessor& caccessor, const TKey& key) {
-  ListNode* found_node;
+  std::shared_ptr<ListNode> found_node;
 
   // immutable read accessor
   HashMapConstAccessor& hashAccessor = caccessor.hashAccessor_;
@@ -368,6 +374,7 @@ bool LRUCache<TKey, TValue, THash>::find(ConstAccessor& caccessor, const TKey& k
     return false;
   } else {
     caccessor.setValue();
+    // ref cnt ++, minus back when out of the scope.
     found_node = hashAccessor->second.listNode_;
     hashAccessor.release();  // release early
   }
@@ -377,8 +384,8 @@ bool LRUCache<TKey, TValue, THash>::find(ConstAccessor& caccessor, const TKey& k
     std::unique_lock<ListMutex> lock{listMutex_, std::try_to_lock};
     if (lock) {
       if (found_node->inList()) {
-        unlink(found_node);
-        append(found_node);
+        unlink(found_node.get());
+        append(found_node.get());
       }
     }
   }
@@ -389,7 +396,7 @@ bool LRUCache<TKey, TValue, THash>::find(ConstAccessor& caccessor, const TKey& k
 template <class TKey, class TValue, class THash>
 bool LRUCache<TKey, TValue, THash>::insert(const TKey& key, const TValue& value) {
   // create node with key through default new allocator.
-  ListNode* node = new ListNode(key);
+  ListNode* node = new ListNode{key};
 
   {
     // release HashMapAccessor early
@@ -397,7 +404,6 @@ bool LRUCache<TKey, TValue, THash>::insert(const TKey& key, const TValue& value)
     HashMapValuePair hashMapValue(key, Value(value, node));
     // hashMapValue is copied and memory allocated in concurrent_hash_map
     if (!hash_map_.insert(hashAccessor, hashMapValue)) {
-      delete node;
       return false;
     }
   }
@@ -414,7 +420,10 @@ bool LRUCache<TKey, TValue, THash>::insert(const TKey& key, const TValue& value)
   {
     // Update double-linked list before update current_size_
     std::unique_lock<ListMutex> lock(listMutex_);
-    append(node);
+    // append if key hasn't been erased.
+    if (!node->delete_flag) {
+        append(node);
+    }
   }
 
   // only update atomic if there's no eviction.
