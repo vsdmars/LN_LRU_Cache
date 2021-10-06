@@ -336,11 +336,13 @@ size_t LRUCache<TKey, TValue, THash>::erase(const TKey& key) {
   }
 
   {
-    std::unique_lock<ListMutex> lock(listMutex_);
     if (found_node->inList()) {
-      unlink(found_node.get());
-      current_size_--;
-      hash_map_.erase(key);
+      std::unique_lock<ListMutex> lock(listMutex_);
+      if (found_node->inList()) {
+        unlink(found_node.get());
+        current_size_--;
+        hash_map_.erase(key);
+      }
     }
   }
 
