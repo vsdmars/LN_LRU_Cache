@@ -206,7 +206,7 @@ TEST_F(LRUCacheTest, TestMultiThread_2) {
 TEST(LRUCacheTest_Same_Key, ConcurrentInsert) {
   auto key = create_IpAddress("192.168.1.1");
   auto value = create_cache_value(42);
-  std::array<unsigned char, 100000> data;
+  std::array<unsigned char, 10000> data;
   data.fill('o');
   IPLRUCache lruc{42};
 
@@ -226,7 +226,7 @@ TEST(LRUCacheTest_Same_Key, ConcurrentInsert) {
 TEST(LRUCacheTest_Same_Key, ConcurrentErase) {
   auto key = create_IpAddress("192.168.1.1");
   auto value = create_cache_value(42);
-  std::array<unsigned char, 100000> data;
+  std::array<unsigned char, 10000> data;
   data.fill('o');
   IPLRUCache lruc{42};
 
@@ -256,7 +256,7 @@ TEST(LRUCacheTest_Same_Key, ConcurrentInsertErase) {
   using PAYLOAD_TYPE = decltype(create_cache_value(42));
   auto key1 = create_IpAddress("192.168.1.1");
 
-  std::array<PAYLOAD_TYPE, 9000> values;
+  std::array<PAYLOAD_TYPE, 90000> values;
   std::generate(values.begin(), values.end(), [] {
     static int i = 0;
     return create_cache_value(i++);
@@ -296,7 +296,7 @@ TEST(LRUCacheTest_Same_Key, ConcurrentInsertEraseFind) {
   using PAYLOAD_TYPE = decltype(create_cache_value(42));
   auto key1 = create_IpAddress("192.168.1.1");
 
-  std::array<PAYLOAD_TYPE, 9000> values;
+  std::array<PAYLOAD_TYPE, 90000> values;
   std::generate(values.begin(), values.end(), [] {
     static int i = 0;
     return create_cache_value(i++);
@@ -343,7 +343,7 @@ TEST(LRUCacheTest_Same_Key, ConcurrentInsertAndPop) {
   auto key1 = create_IpAddress("192.168.1.1");
   auto key2 = create_IpAddress("192.168.1.2");
 
-  std::array<PAYLOAD_TYPE, 9000> values;
+  std::array<PAYLOAD_TYPE, 90000> values;
   std::generate(values.begin(), values.end(), [] {
     static int i = 0;
     return create_cache_value(i++);
