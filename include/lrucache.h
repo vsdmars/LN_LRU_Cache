@@ -61,7 +61,7 @@ namespace LRUC {
 
 template <typename TKey, typename TValue, typename THash = tbb::tbb_hash_compare<TKey>>
 class LRUCache final {
- private:
+private:
   // forward declaration
   struct Value;
   struct ListNode;
@@ -73,12 +73,12 @@ class LRUCache final {
   using HashMapValuePair = typename HashMap::value_type;
   using ListMutex = std::mutex;
 
- private:
+private:
   // static data members
   // used for judging a node exist inside the double-linked list.
   static ListNode* const NullNodePtr;
 
- private:
+private:
   /**
    * ListNode is the element type forms the internal double-linked list,
    * which serves as the LRU cache eviction manipulator.
@@ -89,35 +89,34 @@ class LRUCache final {
     TKey key_;
     // delete_flag is used for determining instance state. If true shall not do any linked list modification
     // related to this instance.
-    bool delete_flag;
+    std::atomic<bool> delete_flag_;
 
-    constexpr ListNode() : prev_(NullNodePtr), next_(nullptr), delete_flag(false) {}
+    constexpr ListNode() : prev_(NullNodePtr), next_(nullptr), delete_flag_(false) {}
 
     // Avoid unintended conversions with UDT.
     // https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rc-explicit
-    explicit constexpr ListNode(const TKey& key) : prev_(NullNodePtr), next_(nullptr), key_(key), delete_flag(false) {}
+    explicit constexpr ListNode(const TKey& key) : prev_(NullNodePtr), next_(nullptr), key_(key), delete_flag_(false) {}
 
     // return false if node is not in cache's double-linked list.
-    constexpr bool inList() const {
-      return prev_ != NullNodePtr;
-    }
+    constexpr bool inList() const { return prev_ != NullNodePtr; }
   };
 
   /**
    * Value is the value stored in the hash-table.
-   * listNode_ data member as back-reference to node to the double-linked list,
+   * listNode_ as back-reference to node to the double-linked list,
    * which contains hash-table key.
    */
   struct Value final {
-    // std::ref/std::cref for uncopyable type
-    TValue value_;
     std::shared_ptr<ListNode> listNode_;
 
-    constexpr Value() = default;
-    constexpr Value(const TValue& value, std::shared_ptr<ListNode> node) : value_(value), listNode_(node) {}
+    // std::ref/std::cref for uncopyable type
+    TValue value_;
+
+    Value() = default;
+    Value(const TValue& value, std::shared_ptr<ListNode> node) : listNode_(node), value_(value) {}
   };
 
- private:
+private:
   // data members
   // consider about padding and false sharing
   ListMutex listMutex_;
@@ -145,8 +144,7 @@ class LRUCache final {
    */
   const size_t cache_size_;
 
-
- private:
+private:
   /**
    * Append a node to the double-linked list as the most-recently used.
    * Not thread-safe. Caller is responsible for a lock.
@@ -161,11 +159,11 @@ class LRUCache final {
 
   /**
    * Remove the least-recently used value from the LRUCache.
-   * Thread-safe, thus mark as const function.
+   * Thread-safe.
    */
-  void popFront() const;
+  void popFront();
 
- public:
+public:
   /**
    * Helper type wraped over tbb::concurrent_hash_map::const_accessor with
    * operator overloaded to retrieve value stored in the hash-table based on
@@ -175,35 +173,23 @@ class LRUCache final {
     constexpr ConstAccessor() = default;
     constexpr ConstAccessor(const ConstAccessor&) = delete;
 
-    constexpr const TValue& operator*() const {
-      return *get();
-    }
+    constexpr const TValue& operator*() const { return *get(); }
 
-    constexpr const TValue* operator->() const {
-      return get();
-    }
+    constexpr const TValue* operator->() const { return get(); }
 
-    constexpr bool empty() const {
-      return hashAccessor_.empty();
-    }
+    constexpr bool empty() const { return hashAccessor_.empty(); }
 
-    constexpr const TValue* get() const {
-      return &value_;
-    }
+    constexpr const TValue* get() const { return &value_; }
 
-    constexpr void release() {
-      hashAccessor_.release();
-    }
+    constexpr void release() { hashAccessor_.release(); }
 
-   private:
+  private:
     /**
      * copy TValue from concurrent_hash_map thus caller could release lock early.
      */
-    void setValue() {
-      value_ = hashAccessor_->second.value_;
-    }
+    void setValue() { value_ = hashAccessor_->second.value_; }
 
-   private:
+  private:
     friend class LRUCache;  // for LRUCache member function to access tbb::concurrent_hash_map::const_accessor
     HashMapConstAccessor hashAccessor_;
     TValue value_;
@@ -218,9 +204,7 @@ class LRUCache final {
    */
   explicit LRUCache(size_t size, size_t bucketCount = std::thread::hardware_concurrency() * 4);
 
-  ~LRUCache() noexcept {
-    clear();
-  }
+  ~LRUCache() noexcept { clear(); }
 
   LRUCache(const LRUCache& other) = delete;
   LRUCache& operator=(const LRUCache&) = delete;
@@ -260,24 +244,20 @@ class LRUCache final {
   /**
    * Returns the number of elements in the container.
    */
-  size_t size() const {
-    return current_size_.load();
-  }
+  size_t size() const { return current_size_.load(); }
 
   /**
    * Returns LRUCache capacity
    */
-  constexpr size_t capacity() const {
-    return cache_size_;
-  }
+  constexpr size_t capacity() const { return cache_size_; }
 };
 
 template <class TKey, class TValue, class THash>
-typename LRUCache<TKey, TValue, THash>::ListNode* const LRUCache<TKey, TValue, THash>::NullNodePtr = (ListNode*) - 1;
+typename LRUCache<TKey, TValue, THash>::ListNode* const LRUCache<TKey, TValue, THash>::NullNodePtr = (ListNode*)-1;
 
 // ---- private member functions ----
 template <class TKey, class TValue, class THash>
-inline void LRUCache<TKey, TValue, THash>::unlink(ListNode* node) {
+void LRUCache<TKey, TValue, THash>::unlink(ListNode* node) {
   ListNode* prev = node->prev_;
   ListNode* next = node->next_;
   prev->next_ = next;
@@ -287,7 +267,7 @@ inline void LRUCache<TKey, TValue, THash>::unlink(ListNode* node) {
 }
 
 template <class TKey, class TValue, class THash>
-inline void LRUCache<TKey, TValue, THash>::append(ListNode* node) {
+void LRUCache<TKey, TValue, THash>::append(ListNode* node) {
   ListNode* prevLatestNode = tail_.prev_;
 
   node->next_ = &tail_;
@@ -298,7 +278,7 @@ inline void LRUCache<TKey, TValue, THash>::append(ListNode* node) {
 }
 
 template <class TKey, class TValue, class THash>
-void LRUCache<TKey, TValue, THash>::popFront() const {
+void LRUCache<TKey, TValue, THash>::popFront() {
   ListNode* candidate{nullptr};
 
   {
@@ -326,7 +306,7 @@ void LRUCache<TKey, TValue, THash>::popFront() const {
 
 template <class TKey, class TValue, class THash>
 LRUCache<TKey, TValue, THash>::LRUCache(size_t size, size_t bucketCount)
-  : hash_map_(bucketCount), current_size_(0), cache_size_(size) {
+    : hash_map_(bucketCount), current_size_(0), cache_size_(size) {
   head_.prev_ = nullptr;
   head_.next_ = &tail_;
   tail_.prev_ = &head_;
@@ -358,12 +338,12 @@ size_t LRUCache<TKey, TValue, THash>::erase(const TKey& key) {
     }
 
     // mark listNode being deleted prevents insert API insert the deleted listNode in parallel.
-    found_node->delete_flag = true;
+    found_node->delete_flag_.store(true);
   }
 
   // tbb::concurrent_hash_map.erase(key) by contract won't throw exception if key does not exist.
   // ListNode instance will be freed once ref cnt hits 0.
-  hash_map_.erase(key);
+  hash_map_.erase(hashAccessor);
 
   return 1;
 }
@@ -404,10 +384,8 @@ bool LRUCache<TKey, TValue, THash>::find(ConstAccessor& caccessor, const TKey& k
 
 template <class TKey, class TValue, class THash>
 bool LRUCache<TKey, TValue, THash>::insert(const TKey& key, const TValue& value) {
-
-  HashMapValuePair hashMapValue{key, Value{value, std::make_shared<ListNode>(key)}};
-  // node shares the ownership of listNode from hash_map which has the ownership of the listNode.
-  std::shared_ptr<ListNode> node = hashMapValue.second.listNode_;
+  std::shared_ptr<ListNode> node = std::make_shared<ListNode>(key);
+  HashMapValuePair hashMapValue{key, Value{value, node}};
 
   {
     // fine-grained lock for hash_map
@@ -433,7 +411,7 @@ bool LRUCache<TKey, TValue, THash>::insert(const TKey& key, const TValue& value)
     // append if key hasn't been erased concurrently.
     // access node through shared_ptr make sure list node isn't deleted
     // by shared_ptr in parallel.
-    if (!node->delete_flag) {
+    if (!node->delete_flag_.load()) {
       append(node.get());
     }
   }
