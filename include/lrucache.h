@@ -343,7 +343,7 @@ size_t LRUCache<TKey, TValue, THash>::erase(const TKey& key) {
 
   // tbb::concurrent_hash_map.erase(key) by contract won't throw exception if key does not exist.
   // ListNode instance will be freed once ref cnt hits 0.
-  hash_map_.erase(hashAccessor);
+  hash_map_.erase(key);
 
   return 1;
 }

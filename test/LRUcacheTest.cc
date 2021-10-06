@@ -204,7 +204,7 @@ TEST_F(LRUCacheTest, TestMultiThread_2) {
 /**
  * Test concurrent insert same key
  */
-TEST(LRUCacheTest_Same_Key, ConcurrentInsert) {
+TEST(LRUCacheTest_Same_Key, DISABLED_ConcurrentInsert) {
   auto key = create_IpAddress("192.168.1.1");
   auto value = create_cache_value(42);
   std::array<unsigned char, 100000> data;
@@ -224,7 +224,7 @@ TEST(LRUCacheTest_Same_Key, ConcurrentInsert) {
 /**
  * Test concurrent erase same key
  */
-TEST(LRUCacheTest_Same_Key, ConcurrentErase) {
+TEST(LRUCacheTest_Same_Key, DISABLED_ConcurrentErase) {
   auto key = create_IpAddress("192.168.1.1");
   auto value = create_cache_value(42);
   std::array<unsigned char, 100000> data;
@@ -253,7 +253,7 @@ TEST(LRUCacheTest_Same_Key, ConcurrentErase) {
 /**
  * Test concurrent erase same key
  */
-TEST(LRUCacheTest_Same_Key, ConcurrentInsertErase) {
+TEST(LRUCacheTest_Same_Key, DISABLED_ConcurrentInsertErase) {
   auto key1 = create_IpAddress("192.168.1.1");
   auto key2 = create_IpAddress("192.168.1.2");
   auto value = create_cache_value(42);
