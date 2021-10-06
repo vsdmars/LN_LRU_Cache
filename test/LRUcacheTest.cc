@@ -277,11 +277,55 @@ TEST(LRUCacheTest_Same_Key, ConcurrentInsertErase) {
                              return create_cache_value(0);
                            }
                            // stage 2, insert keys.
-                         }) & tbb::make_filter<PAYLOAD_TYPE, char>(tbb::filter::parallel, [&](auto o) {
+                         }) & tbb::make_filter<PAYLOAD_TYPE, void>(tbb::filter::parallel, [&](auto o) {
                            lruc.insert(key1, o);
-                           return 'o';
                            // stage 3, erase keys.
-                         }) & tbb::make_filter<char, void>(tbb::filter::parallel, [&](auto _) { lruc.erase(key1); }));
+                         }) & tbb::make_filter<void, void>(tbb::filter::parallel, [&](auto _) { lruc.erase(key1); }));
+
+  IPLRUCache::ConstAccessor ca;
+  bool result = lruc.find(ca, key1);
+  ASSERT_FALSE(result) << "key found in cache after erase";
+
+  ASSERT_EQ(0, lruc.size()) << "cache.size() is not 0";
+}
+
+/**
+ * Test concurrent insert/erase/find same key
+ */
+TEST(LRUCacheTest_Same_Key, ConcurrentInsertEraseFind) {
+  using PAYLOAD_TYPE = decltype(create_cache_value(42));
+  auto key1 = create_IpAddress("192.168.1.1");
+
+  std::array<PAYLOAD_TYPE, 9000> values;
+  std::generate(values.begin(), values.end(), [] {
+    static int i = 0;
+    return create_cache_value(i++);
+  });
+
+  IPLRUCache lruc{42};
+
+  auto si = std::begin(values);
+  auto ei = std::end(values);
+
+  tbb::parallel_pipeline(std::thread::hardware_concurrency() * 8,
+                         // stage 1, pipe data
+                         tbb::make_filter<void, PAYLOAD_TYPE>(tbb::filter::serial, [&](tbb::flow_control& fc) {
+                           if (si != ei) {
+                             return *si++;
+                           } else {
+                             fc.stop();
+                             return create_cache_value(0);
+                           }
+                           // stage 2, insert keys.
+                         }) & tbb::make_filter<PAYLOAD_TYPE, void>(tbb::filter::parallel, [&](auto o) {
+                           lruc.insert(key1, o);
+                           // stage 3, erase keys.
+                         }) & tbb::make_filter<void, void>(tbb::filter::parallel, [&](auto _) {
+                           lruc.erase(key1);
+                         }) & tbb::make_filter<void, void>(tbb::filter::parallel, [&](auto _) {
+                           IPLRUCache::ConstAccessor ca;
+                           lruc.find(ca, key1);
+                         }));
 
   IPLRUCache::ConstAccessor ca;
   bool result = lruc.find(ca, key1);
@@ -324,7 +368,7 @@ TEST(LRUCacheTest_Same_Key, ConcurrentInsertAndPop) {
       }) & tbb::make_filter<PAYLOAD_TYPE, PAYLOAD_TYPE>(tbb::filter::parallel, [&](auto o) {
         lruc.insert(key1, o);
         return o;
-        // stage 3, erase keys.
+        // stage 3, insert keys.
       }) & tbb::make_filter<PAYLOAD_TYPE, void>(tbb::filter::parallel, [&](auto o) { lruc.insert(key2, o); }));
 
   ASSERT_EQ(1, lruc.size()) << "cache.size() is not 1";
