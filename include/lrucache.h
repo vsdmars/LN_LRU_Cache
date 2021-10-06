@@ -282,26 +282,27 @@ void LRUCache<TKey, TValue, THash>::append(ListNode* node) {
 template <class TKey, class TValue, class THash>
 void LRUCache<TKey, TValue, THash>::popFront() {
   ListNode* candidate{nullptr};
+  TKey key;
 
   {
     std::unique_lock<ListMutex> lock(listMutex_);
-
     candidate = head_.next_;
-    // exit early if list is empty.
+
     if (candidate == &tail_) {
       return;
     }
 
     unlink(candidate);
+
+    key = candidate->key_;
   }
 
   HashMapConstAccessor constHashAccessor;
-  if (!hash_map_.find(constHashAccessor, candidate->key_)) {
+  if (!hash_map_.find(constHashAccessor, key)) {
     return;
   }
 
-  // will free ListNode while ref cnt hits 0
-  hash_map_.erase(constHashAccessor);
+  hash_map_.erase(key);
 }
 
 // ---- private member functions end ----
@@ -338,8 +339,6 @@ size_t LRUCache<TKey, TValue, THash>::erase(const TKey& key) {
     }
   }
 
-  // tbb::concurrent_hash_map.erase(key) by contract won't throw exception if key does not exist.
-  // ListNode instance will be freed once ref cnt hits 0.
   hash_map_.erase(key);
 
   return 1;
