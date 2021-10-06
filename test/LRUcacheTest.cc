@@ -254,12 +254,11 @@ TEST(LRUCacheTest_Same_Key, DISABLED_ConcurrentErase) {
 /**
  * Test concurrent erase same key
  */
-// TEST(LRUCacheTest_Same_Key, DISABLED_ConcurrentInsertErase) {
 TEST(LRUCacheTest_Same_Key, ConcurrentInsertErase) {
   auto key1 = create_IpAddress("192.168.1.1");
   auto key2 = create_IpAddress("192.168.1.2");
 
-  std::array<decltype(create_cache_value(42)), 100> values;
+  std::array<decltype(create_cache_value(42)), 1000> values;
   std::generate(values.begin(), values.end(), [] {
     static int i = 0;
     return create_cache_value(i++);
@@ -273,23 +272,35 @@ TEST(LRUCacheTest_Same_Key, ConcurrentInsertErase) {
   tbb::parallel_pipeline(
       std::thread::hardware_concurrency() * 8,
       // stage 1, pipe data
-      tbb::make_filter<void, decltype(create_cache_value(42))>(tbb::filter::serial, [&](tbb::flow_control& fc) {
-        if (si != ei) {
-          return *si++;
-        } else {
-          fc.stop();
-          return create_cache_value(0);
-        }
-        // stage 2, insert keys.
-      }) & tbb::make_filter<decltype(create_cache_value(42)), char>(tbb::filter::parallel, [&](auto o) -> char {
-        lruc.insert(key1, o);
-        lruc.erase(key1);
-        // lruc.insert(key2, value);
-        //
-        // std::cout << "CACHE Size: " << lruc.size() << std::endl << std::flush;
-        return 'o';
-        // stage 3, erase keys.
-      }) & tbb::make_filter<char, void>(tbb::filter::parallel, [&](auto _) { lruc.erase(key1); }));
+      tbb::make_filter<void, decltype(create_cache_value(42))>(tbb::filter::serial,
+                                                               [&](tbb::flow_control& fc) {
+                                                                 if (si != ei) {
+                                                                   return *si++;
+                                                                 } else {
+                                                                   fc.stop();
+                                                                   return create_cache_value(0);
+                                                                 }
+                                                                 // stage 2, insert keys.
+                                                               }) &
+          tbb::make_filter<decltype(create_cache_value(42)), decltype(create_cache_value(42))>(tbb::filter::parallel,
+                                                                                               [&](auto o) {
+                                                                                                 lruc.insert(key1, o);
+                                                                                                 // lruc.erase(key1);
+                                                                                                 // lruc.insert(key2,
+                                                                                                 // value);
+                                                                                                 //
+                                                                                                 // std::cout << "CACHE
+                                                                                                 // Size: " <<
+                                                                                                 // lruc.size() <<
+                                                                                                 // std::endl <<
+                                                                                                 // std::flush;
+                                                                                                 return o;
+                                                                                                 // stage 3, erase keys.
+                                                                                               }) &
+          tbb::make_filter<decltype(create_cache_value(42)), void>(tbb::filter::parallel, [&](auto o) {
+            lruc.erase(key1);
+            lruc.insert(key1, o);
+          }));
 
   std::cout << "SHC-FINAL-CACHE-SIZE: " << lruc.size() << std::endl;
   IPLRUCache::ConstAccessor ca;
@@ -298,20 +309,4 @@ TEST(LRUCacheTest_Same_Key, ConcurrentInsertErase) {
 
   // result = lruc.find(ca, key2);
   // ASSERT_FALSE(result) << "key found after erase";
-}
-
-TEST(LRUCacheTest_Same_Key, DISABLED_TEST_1) {
-  auto key1 = create_IpAddress("192.168.1.1");
-  auto val1 = create_cache_value(42);
-  auto val2 = create_cache_value(43);
-  IPLRUCache lruc{42};
-
-  lruc.insert(key1, val1);
-  lruc.insert(key1, val2);
-
-  IPLRUCache::ConstAccessor ca;
-  lruc.find(ca, key1);
-  std::cout << "TEST " << ca->expiryTs << std::endl;
-
-  lruc.erase(key1);
 }

@@ -349,10 +349,13 @@ size_t LRUCache<TKey, TValue, THash>::erase(const TKey& key) {
       unlink(found_node.get());
       current_size_--;
       spdlog::info("erase real {}", fmt::ptr(found_node.get()));
+
+      hash_map_.erase(key);
+      spdlog::info("hash_map erase called {}", fmt::ptr(found_node.get()));
+    } else {
+      spdlog::info("erase real failed {}", fmt::ptr(found_node.get()));
     }
   }
-
-  hash_map_.erase(key);
 
   return 1;
 }
@@ -407,8 +410,6 @@ bool LRUCache<TKey, TValue, THash>::insert(const TKey& key, const TValue& value)
     }
   }
 
-  // While hits the LRUCache capacity, evict one item from double-linked list.
-  // Happens before insertion.
   size_t size = current_size_.load();
   bool popped = false;
   if (size >= cache_size_) {
@@ -417,11 +418,8 @@ bool LRUCache<TKey, TValue, THash>::insert(const TKey& key, const TValue& value)
   }
 
   {
-    // Update double-linked list before update current_size_
     std::unique_lock<ListMutex> lock(listMutex_);
-    // append if key hasn't been erased concurrently.
-    // access node through shared_ptr make sure list node isn't deleted
-    // by shared_ptr in parallel.
+
     if (!node->delete_flag_) {
       spdlog::info("insert real {}", fmt::ptr(node.get()));
       append(node.get());
@@ -430,19 +428,11 @@ bool LRUCache<TKey, TValue, THash>::insert(const TKey& key, const TValue& value)
     }
   }
 
-  // increase current_size_ iff there's no eviction and current_size_ is less than cache_size_
   if (!popped) {
     size = current_size_++;
   }
 
-  // Check size before this insertion while there could be other threads
-  // updating the cache and had the cache exceed the defined cache size.
-  // Evict one node per insertion, avoid while loop with compare_exchange_weak
-  // which consumes power and increases latency for insertion.
   if (size > cache_size_) {
-    // Use compare_exchange_strong with default sequential consistency memory model.
-    // Only update current_size_ iff size > cache_size_ and eviction happened either from previous
-    // popped check or erase API. This guarantees current_size_ >= 0.
     if (current_size_.compare_exchange_strong(size, size - 1)) {
       popFront();
     }
