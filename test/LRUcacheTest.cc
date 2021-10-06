@@ -6,6 +6,7 @@
  */
 #include "lrucache_common.h"
 #include <iostream>
+#include <algorithm>
 
 using namespace testing;
 
@@ -38,7 +39,7 @@ protected:
 /**
  * Single thread access LRU cache test.
  */
-TEST_F(LRUCacheTest, TestSingleThread) {
+TEST_F(LRUCacheTest, DISABLED_TestSingleThread) {
   constexpr const char* EVICTED_IP = "192.0.0.0";
   constexpr const char* NOT_EVICTED_IP = "192.0.0.1";
 
@@ -83,7 +84,7 @@ TEST_F(LRUCacheTest, TestSingleThread) {
  *
  * Adding 192 new IPs into a fully filled cache concurrently.
  */
-TEST_F(LRUCacheTest, TestMultiThread_1) {
+TEST_F(LRUCacheTest, DISABLED_TestMultiThread_1) {
   constexpr const char* EVICTED_IP = "192.0.0.0";
 
   ASSERT_EQ(LRUC_SIZE, lruc.size()) << "cache.size() result not match";
@@ -134,7 +135,7 @@ TEST_F(LRUCacheTest, TestMultiThread_1) {
  * 1. Flush out LRUC_SIZE IPs and filled with new ones.
  * 2. Read IPs concurrently during the flush out.
  */
-TEST_F(LRUCacheTest, TestMultiThread_2) {
+TEST_F(LRUCacheTest, DISABLED_TestMultiThread_2) {
   ASSERT_EQ(LRUC_SIZE, lruc.size()) << "cache.size() result not match";
   ASSERT_EQ(LRUC_SIZE, lruc.capacity()) << "cache.capacity() result not match";
 
@@ -253,45 +254,45 @@ TEST(LRUCacheTest_Same_Key, DISABLED_ConcurrentErase) {
 /**
  * Test concurrent erase same key
  */
-TEST(LRUCacheTest_Same_Key, DISABLED_ConcurrentInsertErase) {
+TEST(LRUCacheTest_Same_Key, ConcurrentInsertErase) {
   auto key1 = create_IpAddress("192.168.1.1");
   auto key2 = create_IpAddress("192.168.1.2");
-  auto value = create_cache_value(42);
-  std::array<unsigned char, 100000> data;
-  data.fill('o');
+
+  std::array<decltype(create_cache_value(42)), 100000> values;
+  std::generate(values.begin(), values.end(), [] {
+    static int i = 0;
+    return create_cache_value(i++);
+  });
+
   IPLRUCache lruc{42};
 
-  auto si = std::begin(data);
-  auto ei = std::end(data);
+  auto si = std::begin(values);
+  auto ei = std::end(values);
 
-  tbb::parallel_pipeline(std::thread::hardware_concurrency() * 8,
-                         // stage 1, pipe data
-                         tbb::make_filter<void, char>(tbb::filter::serial, [&](tbb::flow_control& fc) -> char {
-                           if (si != ei) {
-                             ++si;
-                             return 'o';
-                           } else {
-                             fc.stop();
-                             return 'o';
-                           }
-                           // stage 2, insert keys.
-                         }) & tbb::make_filter<char, char>(tbb::filter::parallel, [&](auto o) -> char {
-                           lruc.insert(key1, value);
-                           // lruc.insert(key2, value);
-                           return o;
-                           // stage 3, erase keys.
-                         }) & tbb::make_filter<char, void>(tbb::filter::parallel, [&](auto o) {
-                           // lruc.erase(key2);
-                           lruc.erase(key1);
-
-                           return o;
-                           // stage 4, find erased keys.
-                         }));
+  tbb::parallel_pipeline(
+      std::thread::hardware_concurrency() * 8,
+      // stage 1, pipe data
+      tbb::make_filter<void, decltype(create_cache_value(42))>(tbb::filter::serial, [&](tbb::flow_control& fc) {
+        if (si != ei) {
+          return *si++;
+        } else {
+          fc.stop();
+          return create_cache_value(0);
+        }
+        // stage 2, insert keys.
+      }) & tbb::make_filter<decltype(create_cache_value(42)), char>(tbb::filter::parallel, [&](auto o) -> char {
+        lruc.insert(key1, o);
+        // lruc.insert(key2, value);
+        //
+        // std::cout << "CACHE Size: " << lruc.size() << std::endl << std::flush;
+        return 'o';
+        // stage 3, erase keys.
+      }) & tbb::make_filter<char, void>(tbb::filter::parallel, [&](auto _) { lruc.erase(key1); }));
 
   IPLRUCache::ConstAccessor ca;
   bool result = lruc.find(ca, key1);
   ASSERT_FALSE(result) << "key found after erase";
 
-  result = lruc.find(ca, key2);
-  ASSERT_FALSE(result) << "key found after erase";
+  // result = lruc.find(ca, key2);
+  // ASSERT_FALSE(result) << "key found after erase";
 }

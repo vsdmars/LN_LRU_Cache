@@ -12,6 +12,8 @@
 #include <thread>
 #include <vector>
 
+#include <iostream>
+
 namespace LRUC {
 
 /**
@@ -317,13 +319,19 @@ size_t LRUCache<TKey, TValue, THash>::erase(const TKey& key) {
   std::shared_ptr<ListNode> found_node;
 
   // immutable read accessor as fine-grained lock.
-  HashMapConstAccessor hashAccessor{};
+  HashMapConstAccessor hashAccessor;
   if (!hash_map_.find(hashAccessor, key)) {
     hashAccessor.release();  // release early
     return 0;
   } else {
     // shared owner-ship for listNode. ref cnt increased, decrease when found_node out of the scope.
     found_node = hashAccessor->second.listNode_;
+
+    // mark listNode being deleted prevents insert API insert the deleted listNode in parallel.
+    found_node->delete_flag_.store(true);
+
+    std::cout << "SHIT Value: " << hashAccessor->second.value_.expiryTs << std::endl << std::flush;
+
     hashAccessor.release();  // release early
   }
 
@@ -336,9 +344,13 @@ size_t LRUCache<TKey, TValue, THash>::erase(const TKey& key) {
       // This guarantees current_size_ >= 0
       current_size_--;
     }
+  }
 
-    // mark listNode being deleted prevents insert API insert the deleted listNode in parallel.
-    found_node->delete_flag_.store(true);
+  {
+    HashMapConstAccessor hashAccessor;
+    if (!hash_map_.find(hashAccessor, key)) {
+      return 0;
+    }
   }
 
   // tbb::concurrent_hash_map.erase(key) by contract won't throw exception if key does not exist.
@@ -412,6 +424,7 @@ bool LRUCache<TKey, TValue, THash>::insert(const TKey& key, const TValue& value)
     // access node through shared_ptr make sure list node isn't deleted
     // by shared_ptr in parallel.
     if (!node->delete_flag_.load()) {
+      std::cout << "FUCK insert value: " << value.expiryTs << std::endl << std::flush;
       append(node.get());
     }
   }
