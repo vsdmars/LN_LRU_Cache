@@ -59,8 +59,9 @@ static void BM_LRUCacheConcurrentFindInsert_1(benchmark::State& state) {
     delete lruc;
   }
 }
-// BENCHMARK(BM_LRUCacheConcurrentFindInsert_1)->Name("[concurrent] Find/Insert in each Thread")->Threads(tcnt);
-BENCHMARK(BM_LRUCacheConcurrentFindInsert_1)->Threads(tcnt);
+BENCHMARK(BM_LRUCacheConcurrentFindInsert_1)
+    // ->Name("[concurrent] Find/Insert in each Thread")
+    ->Threads(tcnt);
 
 /**
  * Benchmark for LRUCache find and insert in different thread.
@@ -109,8 +110,9 @@ static void BM_LRUCacheConcurrentFindInsert_2(benchmark::State& state) {
     delete lruc;
   }
 }
-// BENCHMARK(BM_LRUCacheConcurrentFindInsert_2)->Name("[concurrent] Find/Insert in different Thread")->Threads(tcnt);
-BENCHMARK(BM_LRUCacheConcurrentFindInsert_2)->Threads(tcnt);
+BENCHMARK(BM_LRUCacheConcurrentFindInsert_2)
+    // ->Name("[concurrent] Find/Insert in different Thread")
+    ->Threads(tcnt);
 
 /**
  * Benchmark for LRUCache find in different thread.
@@ -155,8 +157,9 @@ static void BM_LRUCacheConcurrentFind_1(benchmark::State& state) {
     delete lruc;
   }
 }
-// BENCHMARK(BM_LRUCacheConcurrentFind_1)->Name("[concurrent] Find in different Thread")->Threads(tcnt);
-BENCHMARK(BM_LRUCacheConcurrentFind_1)->Threads(tcnt);
+BENCHMARK(BM_LRUCacheConcurrentFind_1)
+    // ->Name("[concurrent] Find in different Thread")
+    ->Threads(tcnt);
 
 /**
  * Benchmark for LRUCache insert in different thread.
@@ -200,8 +203,9 @@ static void BM_LRUCacheConcurrentInsert_1(benchmark::State& state) {
     delete lruc;
   }
 }
-// BENCHMARK(BM_LRUCacheConcurrentInsert_1)->Name("[concurrent] Insert in different Thread")->Threads(tcnt);
-BENCHMARK(BM_LRUCacheConcurrentInsert_1)->Threads(tcnt);
+BENCHMARK(BM_LRUCacheConcurrentInsert_1)
+    // ->Name("[concurrent] Insert in different Thread")
+    ->Threads(tcnt);
 
 /**
  * Benchmark for LRUCache insert in sequential.
@@ -245,8 +249,8 @@ static void BM_LRUCacheInsert_1(benchmark::State& state) {
     delete lruc;
   }
 }
-// BENCHMARK(BM_LRUCacheInsert_1)->Name("Insert in sequential");
 BENCHMARK(BM_LRUCacheInsert_1);
+// ->Name("Insert in sequential");
 
 /**
  * Benchmark for LRUCache find in sequential.
@@ -291,8 +295,8 @@ static void BM_LRUCacheFind_1(benchmark::State& state) {
     delete lruc;
   }
 }
-// BENCHMARK(BM_LRUCacheFind_1)->Name("Find in sequential");
 BENCHMARK(BM_LRUCacheFind_1);
+// ->Name("Find in sequential");
 
 /**
  * Benchmark for LRUCache find/insert/erase in each thread.
@@ -343,9 +347,9 @@ static void BM_LRUCacheConcurrentFindInsertErase_1(benchmark::State& state) {
     delete lruc;
   }
 }
-// BENCHMARK(BM_LRUCacheConcurrentFindInsertErase_1)->Name("[concurrent] Find/Insert/Erase in each
-// Thread")->Threads(tcnt);
-BENCHMARK(BM_LRUCacheConcurrentFindInsertErase_1)->Threads(tcnt);
+BENCHMARK(BM_LRUCacheConcurrentFindInsertErase_1)
+    // ->Name("[concurrent] Find/Insert/Erase in each Thread")
+    ->Threads(tcnt);
 
 /**
  * Benchmark for LRUCache find/insert/erase in different thread.
@@ -400,7 +404,44 @@ static void BM_LRUCacheConcurrentFindInsertErase_2(benchmark::State& state) {
   }
 }
 BENCHMARK(BM_LRUCacheConcurrentFindInsertErase_2)
-    // ->Name("[concurrent] Find/Insert/Erase in different Thread")
+    // // ->Name("[concurrent] Find/Insert/Erase in different Thread")
+    ->Threads(tcnt);
+
+/**
+ * Benchmark for LRUCache find/insert/erase with same key in different thread.
+ */
+static void BM_LRUCacheConcurrentFindInsertErase_3(benchmark::State& state) {
+  constexpr int LRUC_SIZE = 42;
+  constexpr int EXPIRYTS{42};
+  auto key1 = create_IpAddress("192.168.1.1");
+  auto value = create_cache_value(EXPIRYTS);
+
+  // init. benchmark suite variables.
+  if (state.thread_index == 0) {
+    lruc = new IPLRUCache{LRUC_SIZE};
+  }
+
+  for (auto&& _ : state) {
+    switch (state.iterations() % 3) {
+      case 0: {
+        IPLRUCache::ConstAccessor ca{};
+        lruc->find(ca, key1);
+      } break;
+      case 1:
+        lruc->insert(key1, value);
+        break;
+      case 2:
+        lruc->erase(key1);
+    }
+  }
+
+  // cleanup benchmark suite variables.
+  if (state.thread_index == 0) {
+    delete lruc;
+  }
+}
+BENCHMARK(BM_LRUCacheConcurrentFindInsertErase_3)
+    // ->Name("[concurrent] Find/Insert/Erase same key in different Thread")
     ->Threads(tcnt);
 
 BENCHMARK_MAIN();
