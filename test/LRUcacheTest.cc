@@ -37,7 +37,7 @@ protected:
 /**
  * Single thread access LRU cache test.
  */
-TEST_F(LRUCacheTest, DISABLED_TestSingleThread) {
+TEST_F(LRUCacheTest, TestSingleThread) {
   constexpr const char* EVICTED_IP = "192.0.0.0";
   constexpr const char* NOT_EVICTED_IP = "192.0.0.1";
 
@@ -82,7 +82,7 @@ TEST_F(LRUCacheTest, DISABLED_TestSingleThread) {
  *
  * Adding 192 new IPs into a fully filled cache concurrently.
  */
-TEST_F(LRUCacheTest, DISABLED_TestMultiThread_1) {
+TEST_F(LRUCacheTest, TestMultiThread_1) {
   constexpr const char* EVICTED_IP = "192.0.0.0";
 
   ASSERT_EQ(LRUC_SIZE, lruc.size()) << "cache.size() result not match";
@@ -133,7 +133,7 @@ TEST_F(LRUCacheTest, DISABLED_TestMultiThread_1) {
  * 1. Flush out LRUC_SIZE IPs and filled with new ones.
  * 2. Read IPs concurrently during the flush out.
  */
-TEST_F(LRUCacheTest, DISABLED_TestMultiThread_2) {
+TEST_F(LRUCacheTest, TestMultiThread_2) {
   ASSERT_EQ(LRUC_SIZE, lruc.size()) << "cache.size() result not match";
   ASSERT_EQ(LRUC_SIZE, lruc.capacity()) << "cache.capacity() result not match";
 
@@ -203,7 +203,7 @@ TEST_F(LRUCacheTest, DISABLED_TestMultiThread_2) {
 /**
  * Test concurrent insert same key
  */
-TEST(LRUCacheTest_Same_Key, DISABLED_ConcurrentInsert) {
+TEST(LRUCacheTest_Same_Key, ConcurrentInsert) {
   auto key = create_IpAddress("192.168.1.1");
   auto value = create_cache_value(42);
   std::array<unsigned char, 100000> data;
@@ -223,7 +223,7 @@ TEST(LRUCacheTest_Same_Key, DISABLED_ConcurrentInsert) {
 /**
  * Test concurrent erase same key
  */
-TEST(LRUCacheTest_Same_Key, DISABLED_ConcurrentErase) {
+TEST(LRUCacheTest_Same_Key, ConcurrentErase) {
   auto key = create_IpAddress("192.168.1.1");
   auto value = create_cache_value(42);
   std::array<unsigned char, 100000> data;
@@ -250,11 +250,11 @@ TEST(LRUCacheTest_Same_Key, DISABLED_ConcurrentErase) {
 }
 
 /**
- * Test concurrent erase same key
+ * Test concurrent insert/erase same key
  */
 TEST(LRUCacheTest_Same_Key, ConcurrentInsertErase) {
+  using PAYLOAD_TYPE = decltype(create_cache_value(42));
   auto key1 = create_IpAddress("192.168.1.1");
-  auto key2 = create_IpAddress("192.168.1.2");
 
   std::array<decltype(create_cache_value(42)), 1000> values;
   std::generate(values.begin(), values.end(), [] {
@@ -267,10 +267,53 @@ TEST(LRUCacheTest_Same_Key, ConcurrentInsertErase) {
   auto si = std::begin(values);
   auto ei = std::end(values);
 
+  tbb::parallel_pipeline(std::thread::hardware_concurrency() * 8,
+                         // stage 1, pipe data
+                         tbb::make_filter<void, PAYLOAD_TYPE>(tbb::filter::serial, [&](tbb::flow_control& fc) {
+                           if (si != ei) {
+                             return *si++;
+                           } else {
+                             fc.stop();
+                             return create_cache_value(0);
+                           }
+                           // stage 2, insert keys.
+                         }) & tbb::make_filter<PAYLOAD_TYPE, char>(tbb::filter::parallel, [&](auto o) {
+                           lruc.insert(key1, o);
+                           return 'o';
+                           // stage 3, erase keys.
+                         }) & tbb::make_filter<char, void>(tbb::filter::parallel, [&](auto _) { lruc.erase(key1); }));
+
+  IPLRUCache::ConstAccessor ca;
+  bool result = lruc.find(ca, key1);
+  ASSERT_FALSE(result) << "key found in cache after erase";
+
+  ASSERT_EQ(0, lruc.size()) << "cache.size() is not 0";
+}
+
+/**
+ * Test concurrent insert same key with limited cache capacity
+ * Check if cache obeys LRU contract.
+ */
+TEST(LRUCacheTest_Same_Key, ConcurrentInsertFind) {
+  using PAYLOAD_TYPE = decltype(create_cache_value(42));
+  auto key1 = create_IpAddress("192.168.1.1");
+  auto key2 = create_IpAddress("192.168.1.2");
+
+  std::array<decltype(create_cache_value(42)), 1000> values;
+  std::generate(values.begin(), values.end(), [] {
+    static int i = 0;
+    return create_cache_value(i++);
+  });
+
+  IPLRUCache lruc{1};
+
+  auto si = std::begin(values);
+  auto ei = std::end(values);
+
   tbb::parallel_pipeline(
       std::thread::hardware_concurrency() * 8,
       // stage 1, pipe data
-      tbb::make_filter<void, decltype(create_cache_value(42))>(tbb::filter::serial, [&](tbb::flow_control& fc) {
+      tbb::make_filter<void, PAYLOAD_TYPE>(tbb::filter::serial, [&](tbb::flow_control& fc) {
         if (si != ei) {
           return *si++;
         } else {
@@ -278,16 +321,20 @@ TEST(LRUCacheTest_Same_Key, ConcurrentInsertErase) {
           return create_cache_value(0);
         }
         // stage 2, insert keys.
-      }) & tbb::make_filter<decltype(create_cache_value(42)), char>(tbb::filter::parallel, [&](auto o) {
+      }) & tbb::make_filter<PAYLOAD_TYPE, PAYLOAD_TYPE>(tbb::filter::parallel, [&](auto o) {
         lruc.insert(key1, o);
-        return 'o';
+        return o;
         // stage 3, erase keys.
-      }) & tbb::make_filter<char, void>(tbb::filter::parallel, [&](auto _) { lruc.erase(key1); }));
+      }) & tbb::make_filter<PAYLOAD_TYPE, void>(tbb::filter::parallel, [&](auto o) { lruc.insert(key2, o); }));
 
-  lruc.erase(key1);
   IPLRUCache::ConstAccessor ca;
-  bool result = lruc.find(ca, key1);
-  ASSERT_FALSE(result) << "key found after erase";
+  bool result = lruc.find(ca, key2);
+  ASSERT_TRUE(result) << "key found in cache after pop";
 
-  ASSERT_EQ(0, lruc.size()) << "cache.size() is not 0";
+  ca.release();
+
+  result = lruc.find(ca, key1);
+  ASSERT_FALSE(result) << "key not found in cache";
+
+  ASSERT_EQ(1, lruc.size()) << "cache.size() is not 0";
 }

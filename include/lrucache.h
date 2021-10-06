@@ -92,15 +92,11 @@ private:
     ListNode* next_;
     TKey key_;
 
-    // delete_flag is used for determining listNode state.
-    // If true shall not do any linked list modification related to this instance.
-    std::atomic<bool> delete_flag_;
-
-    constexpr ListNode() : prev_(NullNodePtr), next_(nullptr), delete_flag_(false) {}
+    constexpr ListNode() : prev_(NullNodePtr), next_(nullptr) {}
 
     // explicit to avoid unintended conversions with UDT.
     // https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rc-explicit
-    explicit constexpr ListNode(const TKey& key) : prev_(NullNodePtr), next_(nullptr), key_(key), delete_flag_(false) {}
+    explicit constexpr ListNode(const TKey& key) : prev_(NullNodePtr), next_(nullptr), key_(key) {}
 
     // false if node is not in cache's double-linked list.
     constexpr bool inList() const { return prev_ != NullNodePtr; }
@@ -335,7 +331,6 @@ size_t LRUCache<TKey, TValue, THash>::erase(const TKey& key) {
       return 0;
     } else {
       found_node = accessor->second.listNode_;
-      found_node->delete_flag_ = true;
     }
   }
 
@@ -409,9 +404,7 @@ bool LRUCache<TKey, TValue, THash>::insert(const TKey& key, const TValue& value)
   {
     std::unique_lock<ListMutex> lock(listMutex_);
 
-    if (!node->delete_flag_) {
-      append(node.get());
-    }
+    append(node.get());
   }
 
   if (!popped) {
