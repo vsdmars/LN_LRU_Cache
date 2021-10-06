@@ -264,7 +264,7 @@ void LRUCache<TKey, TValue, THash>::unlink(ListNode* node) {
   ListNode* next = node->next_;
   prev->next_ = next;
   next->prev_ = prev;
-  // assign to NullNodePtr as indicator for this node is no longer in the double-linked list.
+  // assign to NullNodePtr as indicator that this node is no longer in the double-linked list.
   node->prev_ = NullNodePtr;
 }
 
@@ -318,38 +318,23 @@ template <class TKey, class TValue, class THash>
 size_t LRUCache<TKey, TValue, THash>::erase(const TKey& key) {
   std::shared_ptr<ListNode> found_node;
 
-  // immutable read accessor as fine-grained lock.
-  HashMapConstAccessor hashAccessor;
-  if (!hash_map_.find(hashAccessor, key)) {
-    hashAccessor.release();  // release early
+  // immutable read accessor as fine-grained read lock.
+  HashMapConstAccessor accessor;
+  if (!hash_map_.find(accessor, key)) {
+    accessor.release();  // release early
     return 0;
   } else {
-    // shared owner-ship for listNode. ref cnt increased, decrease when found_node out of the scope.
-    found_node = hashAccessor->second.listNode_;
+    found_node = accessor->second.listNode_;
+    found_node->delete_flag_ = true;
 
-    // mark listNode being deleted prevents insert API insert the deleted listNode in parallel.
-    found_node->delete_flag_.store(true);
-
-    std::cout << "SHIT Value: " << hashAccessor->second.value_.expiryTs << std::endl << std::flush;
-
-    hashAccessor.release();  // release early
+    accessor.release();  // release early
   }
 
   {
     std::unique_lock<ListMutex> lock(listMutex_);
     if (found_node->inList()) {
-      // share linkNode ownership with unlink API.
       unlink(found_node.get());
-      // update current_size_ iff listNode is in the list and key is in the hash_map
-      // This guarantees current_size_ >= 0
       current_size_--;
-    }
-  }
-
-  {
-    HashMapConstAccessor hashAccessor;
-    if (!hash_map_.find(hashAccessor, key)) {
-      return 0;
     }
   }
 
@@ -423,7 +408,7 @@ bool LRUCache<TKey, TValue, THash>::insert(const TKey& key, const TValue& value)
     // append if key hasn't been erased concurrently.
     // access node through shared_ptr make sure list node isn't deleted
     // by shared_ptr in parallel.
-    if (!node->delete_flag_.load()) {
+    if (!node->delete_flag_) {
       std::cout << "FUCK insert value: " << value.expiryTs << std::endl << std::flush;
       append(node.get());
     }
