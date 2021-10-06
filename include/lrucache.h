@@ -12,6 +12,7 @@
 #include <thread>
 #include <vector>
 
+#include "spdlog/spdlog.h"
 #include <iostream>
 
 namespace LRUC {
@@ -86,11 +87,7 @@ private:
    * which serves as the LRU cache eviction manipulator.
    */
   struct ListNode final {
-    ~ListNode() {
-      std::cout << "SHC-LDD ADDRESS: " << this << " key: " << key_.toString() << " val: " << value_.expiryTs
-                << std::endl
-                << std::flush;
-    }
+    ~ListNode() { spdlog::info("list destructor {}", fmt::ptr(this)); }
 
     ListNode* prev_;
     ListNode* next_;
@@ -188,21 +185,21 @@ public:
 
     constexpr const TValue* operator->() const { return get(); }
 
-    constexpr bool empty() const { return hashAccessor_.empty(); }
+    constexpr bool empty() const { return constAccessor_.empty(); }
 
     constexpr const TValue* get() const { return &value_; }
 
-    constexpr void release() { hashAccessor_.release(); }
+    constexpr void release() { constAccessor_.release(); }
 
   private:
     /**
      * copy TValue from concurrent_hash_map thus caller could release lock early.
      */
-    void setValue() { value_ = hashAccessor_->second.value_; }
+    void setValue() { value_ = constAccessor_->second.value_; }
 
   private:
     friend class LRUCache;  // for LRUCache member function to access tbb::concurrent_hash_map::const_accessor
-    HashMapConstAccessor hashAccessor_;
+    HashMapConstAccessor constAccessor_;
     TValue value_;
   };
 
@@ -282,9 +279,7 @@ void LRUCache<TKey, TValue, THash>::append(ListNode* node) {
   ListNode* prevLatestNode = tail_.prev_;
 
   if (prevLatestNode != &head_) {
-    std::cout << "SHC-append key/value: " << prevLatestNode->key_.toString() << " " << prevLatestNode->value_.expiryTs
-              << std::endl
-              << std::flush;
+    spdlog::info("append node {} prev {}", fmt::ptr(node), fmt::ptr(prevLatestNode));
   }
 
   node->next_ = &tail_;
@@ -296,7 +291,7 @@ void LRUCache<TKey, TValue, THash>::append(ListNode* node) {
 
 template <class TKey, class TValue, class THash>
 void LRUCache<TKey, TValue, THash>::popFront() {
-  std::cout << "SHC-popFront" << std::endl << std::flush;
+  spdlog::info("popfront");
   ListNode* candidate{nullptr};
   TKey key;
 
@@ -335,20 +330,17 @@ template <class TKey, class TValue, class THash>
 size_t LRUCache<TKey, TValue, THash>::erase(const TKey& key) {
   std::shared_ptr<ListNode> found_node;
 
-  // immutable read accessor as fine-grained read lock.
-  HashMapConstAccessor accessor;
-  if (!hash_map_.find(accessor, key)) {
-    accessor.release();  // release early
-    return 0;
-  } else {
-    found_node = accessor->second.listNode_;
-    found_node->delete_flag_ = true;
+  // fine-grained read lock for hash_map
+  {
+    HashMapConstAccessor accessor;
+    if (!hash_map_.find(accessor, key)) {
+      return 0;
+    } else {
+      found_node = accessor->second.listNode_;
+      found_node->delete_flag_ = true;
 
-    std::cout << "SHC-delete key/value: " << found_node->key_.toString() << " " << found_node->value_.expiryTs
-              << std::endl
-              << std::flush;
-
-    accessor.release();  // release early
+      spdlog::info("erase {}", fmt::ptr(found_node.get()));
+    }
   }
 
   {
@@ -356,9 +348,7 @@ size_t LRUCache<TKey, TValue, THash>::erase(const TKey& key) {
     if (found_node->inList()) {
       unlink(found_node.get());
       current_size_--;
-      std::cout << "SHC-REALREAL  delete key/value: " << found_node->key_.toString() << " "
-                << found_node->value_.expiryTs << std::endl
-                << std::flush;
+      spdlog::info("erase real {}", fmt::ptr(found_node.get()));
     }
   }
 
@@ -371,17 +361,18 @@ template <class TKey, class TValue, class THash>
 bool LRUCache<TKey, TValue, THash>::find(ConstAccessor& caccessor, const TKey& key) {
   std::shared_ptr<ListNode> found_node;
 
-  // immutable read accessor as fine-grained lock.
-  HashMapConstAccessor& hashAccessor = caccessor.hashAccessor_;
-  if (!hash_map_.find(hashAccessor, key)) {
-    hashAccessor.release();  // release early
-    return false;
-  } else {
-    // copy value from hash_map
-    caccessor.setValue();
-    // shared owner-ship for listNode. ref cnt increased, decrease when found_node out of the scope.
-    found_node = hashAccessor->second.listNode_;
-    hashAccessor.release();  // release early
+  {
+    // fine-grained read lock on hash_map
+    if (!hash_map_.find(caccessor.constAccessor_, key)) {
+      caccessor.constAccessor_.release();  // manual release, reference object can't count on RAII
+      return false;
+    } else {
+      // copy value from hash_map
+      caccessor.setValue();
+      // shared owner-ship for listNode. ref cnt increased, decrease when found_node out of the scope.
+      found_node = caccessor.constAccessor_->second.listNode_;
+      caccessor.constAccessor_.release();  // manual release, reference object can't count on RAII
+    }
   }
 
   {
@@ -406,11 +397,12 @@ bool LRUCache<TKey, TValue, THash>::insert(const TKey& key, const TValue& value)
   std::shared_ptr<ListNode> node = std::make_shared<ListNode>(key, value);
   HashMapValuePair hashMapValue{key, Value{value, node}};
 
+  spdlog::info("insert {}", fmt::ptr(node.get()));
+
   {
-    // fine-grained lock for hash_map
-    HashMapAccessor hashAccessor;
-    // hashMapValue is copied and memory allocated in concurrent_hash_map
-    if (!hash_map_.insert(hashAccessor, hashMapValue)) {
+    // fine-grained write lock for hash_map, prevents other lock acquires hash_map
+    HashMapAccessor accessor;
+    if (!hash_map_.insert(accessor, hashMapValue)) {
       return false;
     }
   }
@@ -431,9 +423,10 @@ bool LRUCache<TKey, TValue, THash>::insert(const TKey& key, const TValue& value)
     // access node through shared_ptr make sure list node isn't deleted
     // by shared_ptr in parallel.
     if (!node->delete_flag_) {
-      std::cout << "SHC-insert key/value: " << node->key_.toString() << " " << node->value_.expiryTs << std::endl
-                << std::flush;
+      spdlog::info("insert real {}", fmt::ptr(node.get()));
       append(node.get());
+    } else {
+      spdlog::info("insert real failed {}", fmt::ptr(node.get()));
     }
   }
 

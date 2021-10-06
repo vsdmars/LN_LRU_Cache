@@ -254,6 +254,7 @@ TEST(LRUCacheTest_Same_Key, DISABLED_ConcurrentErase) {
 /**
  * Test concurrent erase same key
  */
+// TEST(LRUCacheTest_Same_Key, DISABLED_ConcurrentInsertErase) {
 TEST(LRUCacheTest_Same_Key, ConcurrentInsertErase) {
   auto key1 = create_IpAddress("192.168.1.1");
   auto key2 = create_IpAddress("192.168.1.2");
@@ -297,4 +298,20 @@ TEST(LRUCacheTest_Same_Key, ConcurrentInsertErase) {
 
   // result = lruc.find(ca, key2);
   // ASSERT_FALSE(result) << "key found after erase";
+}
+
+TEST(LRUCacheTest_Same_Key, DISABLED_TEST_1) {
+  auto key1 = create_IpAddress("192.168.1.1");
+  auto val1 = create_cache_value(42);
+  auto val2 = create_cache_value(43);
+  IPLRUCache lruc{42};
+
+  lruc.insert(key1, val1);
+  lruc.insert(key1, val2);
+
+  IPLRUCache::ConstAccessor ca;
+  lruc.find(ca, key1);
+  std::cout << "TEST " << ca->expiryTs << std::endl;
+
+  lruc.erase(key1);
 }
