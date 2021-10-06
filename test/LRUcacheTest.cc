@@ -258,7 +258,7 @@ TEST(LRUCacheTest_Same_Key, ConcurrentInsertErase) {
   auto key1 = create_IpAddress("192.168.1.1");
   auto key2 = create_IpAddress("192.168.1.2");
 
-  std::array<decltype(create_cache_value(42)), 100000> values;
+  std::array<decltype(create_cache_value(42)), 100> values;
   std::generate(values.begin(), values.end(), [] {
     static int i = 0;
     return create_cache_value(i++);
@@ -282,6 +282,7 @@ TEST(LRUCacheTest_Same_Key, ConcurrentInsertErase) {
         // stage 2, insert keys.
       }) & tbb::make_filter<decltype(create_cache_value(42)), char>(tbb::filter::parallel, [&](auto o) -> char {
         lruc.insert(key1, o);
+        lruc.erase(key1);
         // lruc.insert(key2, value);
         //
         // std::cout << "CACHE Size: " << lruc.size() << std::endl << std::flush;
