@@ -5,8 +5,6 @@
  * value type: CacheValue<CACHE_VALUE_TYPE::TIME_ENTITY_LOOKUP_INFO>>
  */
 #include "lrucache_common.h"
-#include <iostream>
-#include <algorithm>
 
 using namespace testing;
 
@@ -272,41 +270,24 @@ TEST(LRUCacheTest_Same_Key, ConcurrentInsertErase) {
   tbb::parallel_pipeline(
       std::thread::hardware_concurrency() * 8,
       // stage 1, pipe data
-      tbb::make_filter<void, decltype(create_cache_value(42))>(tbb::filter::serial,
-                                                               [&](tbb::flow_control& fc) {
-                                                                 if (si != ei) {
-                                                                   return *si++;
-                                                                 } else {
-                                                                   fc.stop();
-                                                                   return create_cache_value(0);
-                                                                 }
-                                                                 // stage 2, insert keys.
-                                                               }) &
-          tbb::make_filter<decltype(create_cache_value(42)), decltype(create_cache_value(42))>(tbb::filter::parallel,
-                                                                                               [&](auto o) {
-                                                                                                 lruc.insert(key1, o);
-                                                                                                 // lruc.erase(key1);
-                                                                                                 // lruc.insert(key2,
-                                                                                                 // value);
-                                                                                                 //
-                                                                                                 // std::cout << "CACHE
-                                                                                                 // Size: " <<
-                                                                                                 // lruc.size() <<
-                                                                                                 // std::endl <<
-                                                                                                 // std::flush;
-                                                                                                 return o;
-                                                                                                 // stage 3, erase keys.
-                                                                                               }) &
-          tbb::make_filter<decltype(create_cache_value(42)), void>(tbb::filter::parallel, [&](auto o) {
-            lruc.erase(key1);
-            lruc.insert(key1, o);
-          }));
+      tbb::make_filter<void, decltype(create_cache_value(42))>(tbb::filter::serial, [&](tbb::flow_control& fc) {
+        if (si != ei) {
+          return *si++;
+        } else {
+          fc.stop();
+          return create_cache_value(0);
+        }
+        // stage 2, insert keys.
+      }) & tbb::make_filter<decltype(create_cache_value(42)), char>(tbb::filter::parallel, [&](auto o) {
+        lruc.insert(key1, o);
+        return 'o';
+        // stage 3, erase keys.
+      }) & tbb::make_filter<char, void>(tbb::filter::parallel, [&](auto _) { lruc.erase(key1); }));
 
-  std::cout << "SHC-FINAL-CACHE-SIZE: " << lruc.size() << std::endl;
+  lruc.erase(key1);
   IPLRUCache::ConstAccessor ca;
   bool result = lruc.find(ca, key1);
   ASSERT_FALSE(result) << "key found after erase";
 
-  // result = lruc.find(ca, key2);
-  // ASSERT_FALSE(result) << "key found after erase";
+  ASSERT_EQ(0, lruc.size()) << "cache.size() is not 0";
 }

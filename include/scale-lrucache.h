@@ -8,39 +8,34 @@
 #include <limits>
 #include <memory>
 
-
 namespace LRUC {
 
 template <class TKey, class TValue, class THash = tbb::tbb_hash_compare<TKey>>
 class ScalableLRUCache final {
- private:
+private:
   using Shard = LRUCache<TKey, TValue, THash>;
   using ShardPtr = std::unique_ptr<Shard>;
 
   std::vector<ShardPtr> shards_;
-  // ScalableLRUCache size.
   const size_t cache_size_;
-  // shard count
   size_t shard_count_;
 
- private:
+private:
   /**
    * shard returns a Shard (LRUCache instance) based on key.
    */
   Shard& shard(const TKey& key);
 
- public:
+public:
   using ConstAccessor = typename Shard::ConstAccessor;
 
   /**
-   * size: ScalableLRUCache capacity. And each internal LRUCache's capacity can be changed at runtime (Phase II)
+   * size: ScalableLRUCache capacity. And each internal LRUCache's capacity can be changed at runtime TODO(shchang)
    * shard_count: shard count.
    */
   explicit ScalableLRUCache(size_t size, size_t shard_count = 0);
 
-  ~ScalableLRUCache() {
-    clear();
-  }
+  ~ScalableLRUCache() noexcept { clear(); }
 
   ScalableLRUCache(const ScalableLRUCache&) = delete;
   ScalableLRUCache& operator=(const ScalableLRUCache&) = delete;
@@ -51,7 +46,7 @@ class ScalableLRUCache final {
 
   bool insert(const TKey& key, const TValue& value);
 
-  void clear();
+  void clear() noexcept;
 
   size_t size() const;
   size_t size(size_t shard_idx) const;
@@ -79,7 +74,7 @@ typename ScalableLRUCache<TKey, TValue, THash>::Shard& ScalableLRUCache<TKey, TV
 
 template <class TKey, class TValue, class THash>
 ScalableLRUCache<TKey, TValue, THash>::ScalableLRUCache(size_t size, size_t shard_count)
-  : cache_size_(size), shard_count_(shard_count > 0 ? shard_count : std::thread::hardware_concurrency()) {
+    : cache_size_(size), shard_count_(shard_count > 0 ? shard_count : std::thread::hardware_concurrency()) {
   // capacity per LRUCache
   size_t cap = cache_size_ / shard_count_;
   size_t modular = cache_size_ % shard_count_;
@@ -105,7 +100,7 @@ bool ScalableLRUCache<TKey, TValue, THash>::insert(const TKey& key, const TValue
 }
 
 template <class TKey, class TValue, class THash>
-void ScalableLRUCache<TKey, TValue, THash>::clear() {
+void ScalableLRUCache<TKey, TValue, THash>::clear() noexcept {
   for (size_t i = 0; i < shard_count_; i++) {
     shards_[i]->clear();
   }

@@ -18,6 +18,7 @@
 #include <sys/socket.h>
 
 // CPP header
+#include <algorithm>
 #include <array>
 #include <iostream>
 #include <random>

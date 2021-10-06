@@ -12,39 +12,38 @@
 #include <thread>
 #include <vector>
 
-#include "spdlog/spdlog.h"
-#include <iostream>
-
 namespace LRUC {
 
 /**
- * LRUCache is a hash-table data structure provides thread-safe access with
- * defined size limit.
+ * LRUCache is a thread-safe Least Recently Used cache with defined size.
  *
- * As a Least Recently Used (LRU) Cache, when the cache is full(hit the upper
+ * As a Least Recently Used (LRU) Cache, when cache is full(hit the upper
  * bound of the defined capacity), insert() evicts the least recently used key from
  * the cache.
  *
- * find() takes ConstAccessor as carrier for referring to found value inside the LRUCache.
- * The found value is deleted from memory iff ConstAccessor is destructed.
- * Updating the frequency for find could fail due to by contract find() should not stall.
+ * find() takes LRUCache::ConstAccessor as argument which stores the found value inside the
+ * cache with specified key.
  *
- * To avoid increasing latency of concurrent insert() call due to concurrent_hash_map
- * lock shall we use sharded key with multiple LRUCache instance instead.
+ * insert() takes key and value to insert into the cache.
+ *
+ * erase() takes key to remove the entry from the cache.
+ *
+ * clear() clear the cache. Not thread safe.
+ *
+ * size() returns the current cache size.
+ *
+ * capacity() returns the defined capacity.
  *
  * Internal double-linked list is guarded with mutex for modifying the list.
  *
  * Type concepts:
- *  Types TKey and TValue must model the CopyConstructible concept.
- *  For previous intel TBB, the TValue should also have DefaultConstructible concept due
- *  to TBB uses TValue() as placeholder for key finding.
- *  As for latest intel TBB has no such issue.
+ * TKey type requires TBB::HashCompare concept.
+ * TValue type requires CopyInsertable concept.
  *
- *  Type THash must model the TBB::HashCompare concept.
- *  Good performance depends on having good pseudo-randomness in the low-order bits of the hash code.
- *  When keys are pointers, simply casting the pointer to a hash code may cause poor performance because the low-order
- *   bits of the hash code will be always zero if the pointer points to a type with alignment restrictions. A way to
- *   remove this bias is to divide the casted pointer by the size of the type.
+ * Good performance depends on having good pseudo-randomness in the low-order bits of the hash code.
+ * When keys are pointers, simply casting the pointer to a hash code may cause poor performance because the low-order
+ *  bits of the hash code will be always zero if the pointer points to a type with alignment restrictions. A way to
+ *  remove this bias is to divide the casted pointer by the size of the type.
  *
  * Exception Safety:
  * The following functions must not throw exceptions:
@@ -57,9 +56,10 @@ namespace LRUC {
  *    were assigned, and methods size() and empty() may return invalid answers.
  *
  * Reference:
- * https://spec.oneapi.com/versions/latest/elements/oneTBB/source/containers/concurrent_hash_map_cls.html
+ * https://spec.oneapi.io/versions/latest/elements/oneTBB/source/containers/concurrent_hash_map_cls/modifiers.html
  *
  * LRUCache is C++17 compatible
+ *
  */
 
 template <typename TKey, typename TValue, typename THash = tbb::tbb_hash_compare<TKey>>
@@ -85,27 +85,24 @@ private:
   /**
    * ListNode is the element type forms the internal double-linked list,
    * which serves as the LRU cache eviction manipulator.
+   *
    */
   struct ListNode final {
-    ~ListNode() { spdlog::info("list destructor {}", fmt::ptr(this)); }
-
     ListNode* prev_;
     ListNode* next_;
     TKey key_;
-    TValue value_;
-    // delete_flag is used for determining instance state. If true shall not do any linked list modification
-    // related to this instance.
+
+    // delete_flag is used for determining listNode state.
+    // If true shall not do any linked list modification related to this instance.
     std::atomic<bool> delete_flag_;
 
     constexpr ListNode() : prev_(NullNodePtr), next_(nullptr), delete_flag_(false) {}
 
-    // Avoid unintended conversions with UDT.
+    // explicit to avoid unintended conversions with UDT.
     // https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rc-explicit
     explicit constexpr ListNode(const TKey& key) : prev_(NullNodePtr), next_(nullptr), key_(key), delete_flag_(false) {}
-    explicit constexpr ListNode(const TKey& key, const TValue& value)
-        : prev_(NullNodePtr), next_(nullptr), key_(key), value_(value), delete_flag_(false) {}
 
-    // return false if node is not in cache's double-linked list.
+    // false if node is not in cache's double-linked list.
     constexpr bool inList() const { return prev_ != NullNodePtr; }
   };
 
@@ -113,11 +110,10 @@ private:
    * Value is the value stored in the hash-table.
    * listNode_ as back-reference to node to the double-linked list,
    * which contains hash-table key.
+   *
    */
   struct Value final {
     std::shared_ptr<ListNode> listNode_;
-
-    // std::ref/std::cref for uncopyable type
     TValue value_;
 
     Value() = default;
@@ -126,56 +122,63 @@ private:
 
 private:
   // data members
-  // consider about padding and false sharing
+  // consider padding and false sharing
   ListMutex listMutex_;
 
   /**
    * head_ is the least-recently used node.
    * tail_ is the most-recently used node.
    * listMutex should be held during list modification.
+   *
    */
   ListNode head_;
   ListNode tail_;
 
   /**
-   * intel TBB concurrent_hash_map
+   * oneTBB concurrent_hash_map
+   *
    */
   HashMap hash_map_;
 
   /**
-   * current LRUCache size.
+   * cache size.
+   *
    */
   std::atomic<size_t> current_size_;
 
   /**
-   * LRUCache size.
+   * cache capacity
+   *
    */
-  const size_t cache_size_;
+  const size_t capacity_;
 
 private:
   /**
    * Append a node to the double-linked list as the most-recently used.
    * Not thread-safe. Caller is responsible for a lock.
+   *
    */
   void append(ListNode* node);
 
   /**
    * Unlink a node from the list.
    * Not thread-safe. Caller is responsible for a lock.
+   *
    */
   void unlink(ListNode* node);
 
   /**
    * Remove the least-recently used value from the LRUCache.
    * Thread-safe.
+   *
    */
   void popFront();
 
 public:
   /**
-   * Helper type wraped over tbb::concurrent_hash_map::const_accessor with
-   * operator overloaded to retrieve value stored in the hash-table based on
-   * key.
+   * ConstAccessor is a helper type wraped over tbb::concurrent_hash_map::const_accessor with
+   * operator overloaded to retrieve value stored in the hash-table based on key.
+   *
    */
   struct ConstAccessor final {
     constexpr ConstAccessor() = default;
@@ -193,7 +196,8 @@ public:
 
   private:
     /**
-     * copy TValue from concurrent_hash_map thus caller could release lock early.
+     * copy TValue from concurrent_hash_map thus caller could release read lock early.
+     *
      */
     void setValue() { value_ = constAccessor_->second.value_; }
 
@@ -204,11 +208,11 @@ public:
   };
 
   /**
-   * size as the initial size for LRUCache.
-   * The size should be tunable at run-time (Phase II)
+   * size: initial size for the cache.
+   * The size should be tunable at run-time TODO(shchang)
    *
-   * bucketCount is used for initial setup the tbb:concurrent_hash_map, the bucket size
-   * will grow depends on internal algorithm.
+   * bucketCount: used for initial setup the tbb:concurrent_hash_map, the bucket size
+   * will grow depends on internal oneTBB algorithm.
    */
   explicit LRUCache(size_t size, size_t bucketCount = std::thread::hardware_concurrency() * 4);
 
@@ -218,46 +222,51 @@ public:
   LRUCache& operator=(const LRUCache&) = delete;
 
   /**
-   * Erase removes key from LRUCache along with its value.
+   * erase removes key from LRUCache along with its value.
    * returns number of elements removed (0 or 1).
+   *
    */
   size_t erase(const TKey& key);
 
   /**
-   * Find data inside hash-table through provided key.
-   * ConstAccessor stores the found result.
-   * Return true is key exist, otherwise return false.
+   * find finds data inside hash-table through provided key.
+   * ConstAccessor stores a copy of the found result.
+   * Return true if key exist, otherwise false.
    *
-   * Find updates key access frequency.
-   * Update access frequency could fail.
+   * find updates key access frequency.
+   *
    */
   bool find(ConstAccessor& ac, const TKey& key);
 
   /**
-   * Insert key/value into LRUCache. Both key and value is copied into the cache.
-   * Insert updates key access frequency.
+   * insert key/value into cache. Both key and value is copied into the cache.
+   * insert updates key access frequency.
    *
-   * If key already exists in the LRUCache, the value will not be updated and return
+   * If key already exists in the cache, the value will not be updated and return
    * false. Otherwise return true.
+   *
    */
   bool insert(const TKey& key, const TValue& value);
 
   /**
-   * Erases all elements from the container.
+   * clear erases all elements from the container.
    * After this call, size() returns zero.
    * Not thread-safe.
+   *
    */
   void clear() noexcept;
 
   /**
-   * Returns the number of elements in the container.
+   * size returns the current cache size.
+   *
    */
   size_t size() const { return current_size_.load(); }
 
   /**
-   * Returns LRUCache capacity
+   * capacity returns the cache capacity.
+   *
    */
-  constexpr size_t capacity() const { return cache_size_; }
+  constexpr size_t capacity() const { return capacity_; }
 };
 
 template <class TKey, class TValue, class THash>
@@ -270,6 +279,7 @@ void LRUCache<TKey, TValue, THash>::unlink(ListNode* node) {
   ListNode* next = node->next_;
   prev->next_ = next;
   next->prev_ = prev;
+
   // assign to NullNodePtr as indicator that this node is no longer in the double-linked list.
   node->prev_ = NullNodePtr;
 }
@@ -277,10 +287,6 @@ void LRUCache<TKey, TValue, THash>::unlink(ListNode* node) {
 template <class TKey, class TValue, class THash>
 void LRUCache<TKey, TValue, THash>::append(ListNode* node) {
   ListNode* prevLatestNode = tail_.prev_;
-
-  if (prevLatestNode != &head_) {
-    spdlog::info("append node {} prev {}", fmt::ptr(node), fmt::ptr(prevLatestNode));
-  }
 
   node->next_ = &tail_;
   node->prev_ = prevLatestNode;
@@ -291,7 +297,6 @@ void LRUCache<TKey, TValue, THash>::append(ListNode* node) {
 
 template <class TKey, class TValue, class THash>
 void LRUCache<TKey, TValue, THash>::popFront() {
-  spdlog::info("popfront");
   ListNode* candidate{nullptr};
   TKey key;
 
@@ -305,22 +310,15 @@ void LRUCache<TKey, TValue, THash>::popFront() {
 
     unlink(candidate);
 
-    key = candidate->key_;
+    hash_map_.erase(candidate->key_);
   }
-
-  HashMapConstAccessor constHashAccessor;
-  if (!hash_map_.find(constHashAccessor, key)) {
-    return;
-  }
-
-  hash_map_.erase(key);
 }
 
 // ---- private member functions end ----
 
 template <class TKey, class TValue, class THash>
 LRUCache<TKey, TValue, THash>::LRUCache(size_t size, size_t bucketCount)
-    : hash_map_(bucketCount), current_size_(0), cache_size_(size) {
+    : hash_map_(bucketCount), current_size_(0), capacity_(size) {
   head_.prev_ = nullptr;
   head_.next_ = &tail_;
   tail_.prev_ = &head_;
@@ -338,8 +336,6 @@ size_t LRUCache<TKey, TValue, THash>::erase(const TKey& key) {
     } else {
       found_node = accessor->second.listNode_;
       found_node->delete_flag_ = true;
-
-      spdlog::info("erase {}", fmt::ptr(found_node.get()));
     }
   }
 
@@ -348,12 +344,7 @@ size_t LRUCache<TKey, TValue, THash>::erase(const TKey& key) {
     if (found_node->inList()) {
       unlink(found_node.get());
       current_size_--;
-      spdlog::info("erase real {}", fmt::ptr(found_node.get()));
-
       hash_map_.erase(key);
-      spdlog::info("hash_map erase called {}", fmt::ptr(found_node.get()));
-    } else {
-      spdlog::info("erase real failed {}", fmt::ptr(found_node.get()));
     }
   }
 
@@ -397,10 +388,8 @@ bool LRUCache<TKey, TValue, THash>::find(ConstAccessor& caccessor, const TKey& k
 
 template <class TKey, class TValue, class THash>
 bool LRUCache<TKey, TValue, THash>::insert(const TKey& key, const TValue& value) {
-  std::shared_ptr<ListNode> node = std::make_shared<ListNode>(key, value);
+  std::shared_ptr<ListNode> node = std::make_shared<ListNode>(key);
   HashMapValuePair hashMapValue{key, Value{value, node}};
-
-  spdlog::info("insert {}", fmt::ptr(node.get()));
 
   {
     // fine-grained write lock for hash_map, prevents other lock acquires hash_map
@@ -412,7 +401,7 @@ bool LRUCache<TKey, TValue, THash>::insert(const TKey& key, const TValue& value)
 
   size_t size = current_size_.load();
   bool popped = false;
-  if (size >= cache_size_) {
+  if (size >= capacity_) {
     popFront();
     popped = true;
   }
@@ -421,10 +410,7 @@ bool LRUCache<TKey, TValue, THash>::insert(const TKey& key, const TValue& value)
     std::unique_lock<ListMutex> lock(listMutex_);
 
     if (!node->delete_flag_) {
-      spdlog::info("insert real {}", fmt::ptr(node.get()));
       append(node.get());
-    } else {
-      spdlog::info("insert real failed {}", fmt::ptr(node.get()));
     }
   }
 
@@ -432,7 +418,7 @@ bool LRUCache<TKey, TValue, THash>::insert(const TKey& key, const TValue& value)
     size = current_size_++;
   }
 
-  if (size > cache_size_) {
+  if (size > capacity_) {
     if (current_size_.compare_exchange_strong(size, size - 1)) {
       popFront();
     }
