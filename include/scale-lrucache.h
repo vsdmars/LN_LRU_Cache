@@ -48,11 +48,11 @@ public:
 
   void clear() noexcept;
 
-  size_t size() const;
-  size_t size(size_t shard_idx) const;
+  long long size() const;
+  int size(size_t shard_idx) const;
 
-  size_t capacity() const;
-  size_t capacity(size_t shard_idx) const;
+  long long capacity() const;
+  int capacity(size_t shard_idx) const;
 
   size_t shardCount() const;
 };
@@ -107,8 +107,8 @@ void ScalableLRUCache<TKey, TValue, THash>::clear() noexcept {
 }
 
 template <class TKey, class TValue, class THash>
-size_t ScalableLRUCache<TKey, TValue, THash>::size() const {
-  size_t size = 0;
+long long ScalableLRUCache<TKey, TValue, THash>::size() const {
+  long long size = 0;
   for (size_t i = 0; i < shard_count_; i++) {
     size += shards_[i]->size();
   }
@@ -116,7 +116,7 @@ size_t ScalableLRUCache<TKey, TValue, THash>::size() const {
 }
 
 template <class TKey, class TValue, class THash>
-size_t ScalableLRUCache<TKey, TValue, THash>::size(size_t shard_idx) const {
+int ScalableLRUCache<TKey, TValue, THash>::size(size_t shard_idx) const {
   if (shard_idx < shard_count_) {
     return shards_[shard_idx]->size();
   }
@@ -125,8 +125,8 @@ size_t ScalableLRUCache<TKey, TValue, THash>::size(size_t shard_idx) const {
 }
 
 template <class TKey, class TValue, class THash>
-size_t ScalableLRUCache<TKey, TValue, THash>::capacity() const {
-  size_t size = 0;
+long long ScalableLRUCache<TKey, TValue, THash>::capacity() const {
+  long long size = 0;
   for (size_t i = 0; i < shard_count_; i++) {
     size += shards_[i]->capacity();
   }
@@ -135,7 +135,7 @@ size_t ScalableLRUCache<TKey, TValue, THash>::capacity() const {
 }
 
 template <class TKey, class TValue, class THash>
-size_t ScalableLRUCache<TKey, TValue, THash>::capacity(size_t shard_idx) const {
+int ScalableLRUCache<TKey, TValue, THash>::capacity(size_t shard_idx) const {
   if (shard_idx < shard_count_) {
     return shards_[shard_idx]->capacity();
   }

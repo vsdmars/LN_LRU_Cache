@@ -140,13 +140,13 @@ private:
    * cache size.
    *
    */
-  std::atomic<size_t> current_size_;
+  std::atomic<int> current_size_;
 
   /**
    * cache capacity
    *
    */
-  const size_t capacity_;
+  const int capacity_;
 
 private:
   /**
@@ -210,7 +210,7 @@ public:
    * bucketCount: used for initial setup the tbb:concurrent_hash_map, the bucket size
    * will grow depends on internal oneTBB algorithm.
    */
-  explicit LRUCache(size_t size, size_t bucketCount = std::thread::hardware_concurrency() * 4);
+  explicit LRUCache(int size, size_t bucketCount = std::thread::hardware_concurrency() * 4);
 
   ~LRUCache() noexcept { clear(); }
 
@@ -256,17 +256,18 @@ public:
    * size returns the current cache size.
    *
    */
-  size_t size() const { return current_size_.load(); }
+  int size() const { return current_size_.load(); }
 
   /**
    * capacity returns the cache capacity.
    *
    */
-  constexpr size_t capacity() const { return capacity_; }
+  constexpr int capacity() const { return capacity_; }
 };
 
 template <class TKey, class TValue, class THash>
-typename LRUCache<TKey, TValue, THash>::ListNode* const LRUCache<TKey, TValue, THash>::NullNodePtr = (ListNode*)-1;
+typename LRUCache<TKey, TValue, THash>::ListNode* const LRUCache<TKey, TValue, THash>::NullNodePtr =
+    reinterpret_cast<ListNode*>(-1);
 
 // ---- private member functions ----
 template <class TKey, class TValue, class THash>
@@ -313,7 +314,7 @@ void LRUCache<TKey, TValue, THash>::popFront() {
 // ---- private member functions end ----
 
 template <class TKey, class TValue, class THash>
-LRUCache<TKey, TValue, THash>::LRUCache(size_t size, size_t bucketCount)
+LRUCache<TKey, TValue, THash>::LRUCache(int size, size_t bucketCount)
     : hash_map_(bucketCount), current_size_(0), capacity_(size) {
   head_.prev_ = nullptr;
   head_.next_ = &tail_;
@@ -394,7 +395,7 @@ bool LRUCache<TKey, TValue, THash>::insert(const TKey& key, const TValue& value)
     }
   }
 
-  size_t size = current_size_.load();
+  int size = current_size_.load();
   bool popped = false;
   if (size >= capacity_) {
     popFront();
