@@ -408,7 +408,6 @@ bool LRUCache<TKey, TValue, THash>::insert(const TKey& key, const TValue& value)
     // access node through shared_ptr make sure list node isn't deleted
     // by shared_ptr in parallel.
     if (!node->delete_flag_) {
-      std::cout << "FUCK insert value: " << value.expiryTs << std::endl << std::flush;
       append(node.get());
     }
   }
