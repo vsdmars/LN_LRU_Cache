@@ -158,7 +158,7 @@ TEST_F(LRUCacheTest, DISABLED_TestMultiThread_2) {
   // stage 5. IPs lookup in LRUCache while insert/lookup/erase continues to happen.
   // stage 6. update total IP insertion count.
   tbb::parallel_pipeline(
-      std::thread::hardware_concurrency() * 2,
+      std::thread::hardware_concurrency() * 8,
       // stage 1.
       tbb::make_filter<void, std::string>(tbb::filter::serial, [&](tbb::flow_control& fc) -> std::string {
         if (si != ei) {
@@ -289,6 +289,7 @@ TEST(LRUCacheTest_Same_Key, ConcurrentInsertErase) {
         // stage 3, erase keys.
       }) & tbb::make_filter<char, void>(tbb::filter::parallel, [&](auto _) { lruc.erase(key1); }));
 
+  std::cout << "SHC-FINAL-CACHE-SIZE: " << lruc.size() << std::endl;
   IPLRUCache::ConstAccessor ca;
   bool result = lruc.find(ca, key1);
   ASSERT_FALSE(result) << "key found after erase";

@@ -86,9 +86,16 @@ private:
    * which serves as the LRU cache eviction manipulator.
    */
   struct ListNode final {
+    ~ListNode() {
+      std::cout << "SHC-LDD ADDRESS: " << this << " key: " << key_.toString() << " val: " << value_.expiryTs
+                << std::endl
+                << std::flush;
+    }
+
     ListNode* prev_;
     ListNode* next_;
     TKey key_;
+    TValue value_;
     // delete_flag is used for determining instance state. If true shall not do any linked list modification
     // related to this instance.
     std::atomic<bool> delete_flag_;
@@ -98,6 +105,8 @@ private:
     // Avoid unintended conversions with UDT.
     // https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines#Rc-explicit
     explicit constexpr ListNode(const TKey& key) : prev_(NullNodePtr), next_(nullptr), key_(key), delete_flag_(false) {}
+    explicit constexpr ListNode(const TKey& key, const TValue& value)
+        : prev_(NullNodePtr), next_(nullptr), key_(key), value_(value), delete_flag_(false) {}
 
     // return false if node is not in cache's double-linked list.
     constexpr bool inList() const { return prev_ != NullNodePtr; }
@@ -272,6 +281,12 @@ template <class TKey, class TValue, class THash>
 void LRUCache<TKey, TValue, THash>::append(ListNode* node) {
   ListNode* prevLatestNode = tail_.prev_;
 
+  if (prevLatestNode != &head_) {
+    std::cout << "SHC-append key/value: " << prevLatestNode->key_.toString() << " " << prevLatestNode->value_.expiryTs
+              << std::endl
+              << std::flush;
+  }
+
   node->next_ = &tail_;
   node->prev_ = prevLatestNode;
 
@@ -281,6 +296,7 @@ void LRUCache<TKey, TValue, THash>::append(ListNode* node) {
 
 template <class TKey, class TValue, class THash>
 void LRUCache<TKey, TValue, THash>::popFront() {
+  std::cout << "SHC-popFront" << std::endl << std::flush;
   ListNode* candidate{nullptr};
   TKey key;
 
@@ -328,6 +344,10 @@ size_t LRUCache<TKey, TValue, THash>::erase(const TKey& key) {
     found_node = accessor->second.listNode_;
     found_node->delete_flag_ = true;
 
+    std::cout << "SHC-delete key/value: " << found_node->key_.toString() << " " << found_node->value_.expiryTs
+              << std::endl
+              << std::flush;
+
     accessor.release();  // release early
   }
 
@@ -336,6 +356,9 @@ size_t LRUCache<TKey, TValue, THash>::erase(const TKey& key) {
     if (found_node->inList()) {
       unlink(found_node.get());
       current_size_--;
+      std::cout << "SHC-REALREAL  delete key/value: " << found_node->key_.toString() << " "
+                << found_node->value_.expiryTs << std::endl
+                << std::flush;
     }
   }
 
@@ -380,7 +403,7 @@ bool LRUCache<TKey, TValue, THash>::find(ConstAccessor& caccessor, const TKey& k
 
 template <class TKey, class TValue, class THash>
 bool LRUCache<TKey, TValue, THash>::insert(const TKey& key, const TValue& value) {
-  std::shared_ptr<ListNode> node = std::make_shared<ListNode>(key);
+  std::shared_ptr<ListNode> node = std::make_shared<ListNode>(key, value);
   HashMapValuePair hashMapValue{key, Value{value, node}};
 
   {
@@ -408,6 +431,8 @@ bool LRUCache<TKey, TValue, THash>::insert(const TKey& key, const TValue& value)
     // access node through shared_ptr make sure list node isn't deleted
     // by shared_ptr in parallel.
     if (!node->delete_flag_) {
+      std::cout << "SHC-insert key/value: " << node->key_.toString() << " " << node->value_.expiryTs << std::endl
+                << std::flush;
       append(node.get());
     }
   }
