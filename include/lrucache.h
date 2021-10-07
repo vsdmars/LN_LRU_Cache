@@ -295,7 +295,6 @@ void LRUCache<TKey, TValue, THash>::append(ListNode* node) {
 template <class TKey, class TValue, class THash>
 void LRUCache<TKey, TValue, THash>::popFront() {
   ListNode* candidate{nullptr};
-  TKey key;
 
   {
     std::unique_lock<ListMutex> lock(listMutex_);
@@ -306,9 +305,16 @@ void LRUCache<TKey, TValue, THash>::popFront() {
     }
 
     unlink(candidate);
-
-    hash_map_.erase(candidate->key_);
   }
+
+  HashMapConstAccessor accessor;
+  if (!hash_map_.find(accessor, candidate->key_)) {
+    return;
+  }
+
+  // erase issues lock, do not call this API inside linked-list lock.
+  // https://github.com/jckarter/tbb/blob/0343100743d23f707a9001bc331988a31778c9f4/include/tbb/concurrent_hash_map.h#L1093
+  hash_map_.erase(accessor);
 }
 
 // ---- private member functions end ----
@@ -324,6 +330,7 @@ LRUCache<TKey, TValue, THash>::LRUCache(int size, size_t bucketCount)
 template <class TKey, class TValue, class THash>
 size_t LRUCache<TKey, TValue, THash>::erase(const TKey& key) {
   std::shared_ptr<ListNode> found_node;
+  bool marked = false;
 
   // fine-grained read lock for hash_map
   {
@@ -341,9 +348,15 @@ size_t LRUCache<TKey, TValue, THash>::erase(const TKey& key) {
       if (found_node->inList()) {
         unlink(found_node.get());
         current_size_--;
-        hash_map_.erase(key);
+        marked = true;
       }
     }
+  }
+
+  if (marked) {
+    // erase issues lock, do not call this API inside linked-list lock.
+    // https://github.com/jckarter/tbb/blob/0343100743d23f707a9001bc331988a31778c9f4/include/tbb/concurrent_hash_map.h#L1093
+    hash_map_.erase(key);
   }
 
   return 1;
