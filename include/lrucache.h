@@ -64,7 +64,7 @@ namespace LRUC {
 
 template <typename TKey, typename TValue, typename THash = tbb::tbb_hash_compare<TKey>>
 class LRUCache final {
-private:
+ private:
   // forward declaration
   struct Value;
   struct ListNode;
@@ -76,12 +76,12 @@ private:
   using HashMapValuePair = typename HashMap::value_type;
   using ListMutex = std::mutex;
 
-private:
+ private:
   // static data members
   // used for judging a node exist inside the double-linked list.
   static ListNode* const NullNodePtr;
 
-private:
+ private:
   /**
    * ListNode is the element type forms the internal double-linked list,
    * which serves as the LRU cache eviction manipulator.
@@ -99,7 +99,9 @@ private:
     explicit constexpr ListNode(const TKey& key) : prev_(NullNodePtr), next_(nullptr), key_(key) {}
 
     // false if node is not in cache's double-linked list.
-    constexpr bool inList() const { return prev_ != NullNodePtr; }
+    constexpr bool inList() const {
+      return prev_ != NullNodePtr;
+    }
   };
 
   /**
@@ -116,7 +118,7 @@ private:
     Value(const TValue& value, std::shared_ptr<ListNode> node) : listNode_(node), value_(value) {}
   };
 
-private:
+ private:
   // data members
   // consider padding and false sharing
   ListMutex listMutex_;
@@ -148,7 +150,7 @@ private:
    */
   const int capacity_;
 
-private:
+ private:
   /**
    * Append a node to the double-linked list as the most-recently used.
    * Not thread-safe. Caller is responsible for a lock.
@@ -170,7 +172,7 @@ private:
    */
   void popFront();
 
-public:
+ public:
   /**
    * ConstAccessor is a helper type wraped over tbb::concurrent_hash_map::const_accessor with
    * operator overloaded to retrieve value stored in the hash-table based on key.
@@ -180,24 +182,36 @@ public:
     constexpr ConstAccessor() = default;
     constexpr ConstAccessor(const ConstAccessor&) = delete;
 
-    constexpr const TValue& operator*() const { return *get(); }
+    constexpr const TValue& operator*() const {
+      return *get();
+    }
 
-    constexpr const TValue* operator->() const { return get(); }
+    constexpr const TValue* operator->() const {
+      return get();
+    }
 
-    constexpr bool empty() const { return constAccessor_.empty(); }
+    constexpr bool empty() const {
+      return constAccessor_.empty();
+    }
 
-    constexpr const TValue* get() const { return &value_; }
+    constexpr const TValue* get() const {
+      return &value_;
+    }
 
-    constexpr void release() { constAccessor_.release(); }
+    constexpr void release() {
+      constAccessor_.release();
+    }
 
-  private:
+   private:
     /**
      * copy TValue from concurrent_hash_map thus caller could release read lock early.
      *
      */
-    void setValue() { value_ = constAccessor_->second.value_; }
+    void setValue() {
+      value_ = constAccessor_->second.value_;
+    }
 
-  private:
+   private:
     friend class LRUCache;  // for LRUCache member function to access tbb::concurrent_hash_map::const_accessor
     HashMapConstAccessor constAccessor_;
     TValue value_;
@@ -210,9 +224,11 @@ public:
    * bucketCount: used for initial setup the tbb:concurrent_hash_map, the bucket size
    * will grow depends on internal oneTBB algorithm.
    */
-  explicit LRUCache(int size, size_t bucketCount = std::thread::hardware_concurrency());
+  explicit LRUCache(int size, size_t bucketCount = std::thread::hardware_concurrency() * 8);
 
-  ~LRUCache() noexcept { clear(); }
+  ~LRUCache() noexcept {
+    clear();
+  }
 
   LRUCache(const LRUCache& other) = delete;
   LRUCache& operator=(const LRUCache&) = delete;
@@ -256,18 +272,22 @@ public:
    * size returns the current cache size.
    *
    */
-  int size() const { return current_size_.load(); }
+  int size() const {
+    return current_size_.load();
+  }
 
   /**
    * capacity returns the cache capacity.
    *
    */
-  constexpr int capacity() const { return capacity_; }
+  constexpr int capacity() const {
+    return capacity_;
+  }
 };
 
 template <class TKey, class TValue, class THash>
 typename LRUCache<TKey, TValue, THash>::ListNode* const LRUCache<TKey, TValue, THash>::NullNodePtr =
-    reinterpret_cast<ListNode*>(-1);
+  reinterpret_cast<ListNode*>(-1);
 
 // ---- private member functions ----
 template <class TKey, class TValue, class THash>
@@ -321,7 +341,7 @@ void LRUCache<TKey, TValue, THash>::popFront() {
 
 template <class TKey, class TValue, class THash>
 LRUCache<TKey, TValue, THash>::LRUCache(int size, size_t bucketCount)
-    : hash_map_(bucketCount), current_size_(0), capacity_(size) {
+  : hash_map_(bucketCount), current_size_(0), capacity_(size) {
   head_.prev_ = nullptr;
   head_.next_ = &tail_;
   tail_.prev_ = &head_;
