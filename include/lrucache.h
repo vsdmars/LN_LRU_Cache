@@ -210,7 +210,7 @@ public:
    * bucketCount: used for initial setup the tbb:concurrent_hash_map, the bucket size
    * will grow depends on internal oneTBB algorithm.
    */
-  explicit LRUCache(int size, size_t bucketCount = std::thread::hardware_concurrency() * 4);
+  explicit LRUCache(int size, size_t bucketCount = std::thread::hardware_concurrency());
 
   ~LRUCache() noexcept { clear(); }
 

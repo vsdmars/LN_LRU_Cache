@@ -5,6 +5,7 @@
 #pragma once
 #include "lrucache.h"
 
+#include <cmath>
 #include <limits>
 #include <memory>
 
@@ -75,12 +76,14 @@ typename ScalableLRUCache<TKey, TValue, THash>::Shard& ScalableLRUCache<TKey, TV
 template <class TKey, class TValue, class THash>
 ScalableLRUCache<TKey, TValue, THash>::ScalableLRUCache(size_t size, size_t shard_count)
     : cache_size_(size), shard_count_(shard_count > 0 ? shard_count : std::thread::hardware_concurrency()) {
-  // capacity per LRUCache
+  const size_t bucket_count =
+      static_cast<size_t>(std::ceil(std::log2(shard_count_ / std::thread::hardware_concurrency()) + 0.5));
+
   size_t cap = cache_size_ / shard_count_;
   size_t modular = cache_size_ % shard_count_;
 
   for (size_t i = 0; i < shard_count_; i++) {
-    shards_.emplace_back(std::make_unique<Shard>(i != 0 ? cap : (cap + modular)));
+    shards_.emplace_back(std::make_unique<Shard>(i != 0 ? cap : (cap + modular), bucket_count));
   }
 }
 
