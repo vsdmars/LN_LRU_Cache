@@ -97,3 +97,8 @@ Requirements
 Contact
 -------
 **vsdmars<<at>>gmail.com**
+
+
+.. image:: https://api.codacy.com/project/badge/Grade/3f0cb7bb8f734ba7813bf34011354fb3
+   :alt: Codacy Badge
+   :target: https://app.codacy.com/gh/vsdmars/LN_LRU_Cache?utm_source=github.com&utm_medium=referral&utm_content=vsdmars/LN_LRU_Cache&utm_campaign=Badge_Grade_Settings
