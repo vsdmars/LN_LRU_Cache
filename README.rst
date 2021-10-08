@@ -6,6 +6,8 @@
   :target: https://github.com/vsdmars/LN_LRU_Cache/actions/workflows/lruc_action.yaml
 .. image:: https://app.codacy.com/project/badge/Grade/8613cff7339947578b7a8897535a1f88
   :target: https://www.codacy.com/gh/vsdmars/LN_LRU_Cache/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=vsdmars/LN_LRU_Cache&amp;utm_campaign=Badge_Grade
+.. image:: https://img.shields.io/badge/license-MIT-blue.svg
+  :target: https://raw.githubusercontent.com/vsdmars/LN_LRU_Cache/master/LICENSE
 .. _intel-tbb: https://github.com/oneapi-src/oneTBB
 .. ;; And now we continue with the actual content
 
