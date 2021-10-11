@@ -47,6 +47,8 @@ using IPLRUCache = LRUC::LRUCache<IpAddress, CacheValue<CACHE_VALUE_TYPE::TIME_E
  */
 using SCALE_IPLRUCache = LRUC::ScalableLRUCache<IpAddress, CacheValue<CACHE_VALUE_TYPE::TIME_ENTITY_LOOKUP_INFO>>;
 
+using IPClockLRUCache = LRUC::LRUClockCache<IpAddress, CacheValue<CACHE_VALUE_TYPE::TIME_ENTITY_LOOKUP_INFO>>;
+
 namespace {
 
 /**

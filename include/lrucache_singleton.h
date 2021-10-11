@@ -23,6 +23,8 @@
  */
 #pragma once
 
+#include <clock_lru_cache.h>
+#include <clock_lru_cache_hash.h>
 #include <lrucache_tbb.h>
 #include <scale-lrucache.h>
 
