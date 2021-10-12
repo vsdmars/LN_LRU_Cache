@@ -53,7 +53,7 @@ struct hash<AtsPluginUtils::IpAddress> {
 
 template <>
 struct equal_to<AtsPluginUtils::IpAddress> {
-  constexpr bool operator()(const AtsPluginUtils::IpAddress& lhs, const AtsPluginUtils::IpAddress& rhs) const {
+  bool operator()(const AtsPluginUtils::IpAddress& lhs, const AtsPluginUtils::IpAddress& rhs) const {
     return lhs == rhs;
   }
 };
