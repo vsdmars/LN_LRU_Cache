@@ -16,7 +16,7 @@ constexpr size_t tcnt = 16;
 /**
  * Benchmark for LRUCache find and insert in each thread.
  */
-static void BM_LRUCacheConcurrentFindInsert_1(benchmark::State& state) {
+static void BM_ClockLRUCacheConcurrentFindInsert_1(benchmark::State& state) {
   // keep those const variables inside the function and make it as constexpr
   constexpr int LRUC_SIZE = 1'885'725;
   constexpr int bfrom{0};
@@ -58,14 +58,14 @@ static void BM_LRUCacheConcurrentFindInsert_1(benchmark::State& state) {
     delete lruc;
   }
 }
-BENCHMARK(BM_LRUCacheConcurrentFindInsert_1)
+BENCHMARK(BM_ClockLRUCacheConcurrentFindInsert_1)
     // ->Name("[concurrent] Find/Insert in each Thread")
     ->Threads(tcnt);
 
 /**
  * Benchmark for LRUCache find and insert in different thread.
  */
-static void BM_LRUCacheConcurrentFindInsert_2(benchmark::State& state) {
+static void BM_ClockLRUCacheConcurrentFindInsert_2(benchmark::State& state) {
   // keep those const variables inside the function and make it as constexpr
   constexpr int LRUC_SIZE = 1'885'725;
   constexpr int bfrom{0};
@@ -108,14 +108,14 @@ static void BM_LRUCacheConcurrentFindInsert_2(benchmark::State& state) {
     delete lruc;
   }
 }
-BENCHMARK(BM_LRUCacheConcurrentFindInsert_2)
+BENCHMARK(BM_ClockLRUCacheConcurrentFindInsert_2)
     // ->Name("[concurrent] Find/Insert in different Thread")
     ->Threads(tcnt);
 
 /**
  * Benchmark for LRUCache find in different thread.
  */
-static void BM_LRUCacheConcurrentFind_1(benchmark::State& state) {
+static void BM_ClockLRUCacheConcurrentFind_1(benchmark::State& state) {
   // keep those const variables inside the function and make it as constexpr
   constexpr int LRUC_SIZE = 1'885'725;
   constexpr int bfrom{0};
@@ -154,14 +154,14 @@ static void BM_LRUCacheConcurrentFind_1(benchmark::State& state) {
     delete lruc;
   }
 }
-BENCHMARK(BM_LRUCacheConcurrentFind_1)
+BENCHMARK(BM_ClockLRUCacheConcurrentFind_1)
     // ->Name("[concurrent] Find in different Thread")
     ->Threads(tcnt);
 
 /**
  * Benchmark for LRUCache insert in different thread.
  */
-static void BM_LRUCacheConcurrentInsert_1(benchmark::State& state) {
+static void BM_ClockLRUCacheConcurrentInsert_1(benchmark::State& state) {
   // keep those const variables inside the function and make it as constexpr
   constexpr int LRUC_SIZE = 1'885'725;
   constexpr int bfrom{0};
@@ -200,14 +200,14 @@ static void BM_LRUCacheConcurrentInsert_1(benchmark::State& state) {
     delete lruc;
   }
 }
-BENCHMARK(BM_LRUCacheConcurrentInsert_1)
+BENCHMARK(BM_ClockLRUCacheConcurrentInsert_1)
     // ->Name("[concurrent] Insert in different Thread")
     ->Threads(tcnt);
 
 /**
  * Benchmark for LRUCache insert in sequential.
  */
-static void BM_LRUCacheInsert_1(benchmark::State& state) {
+static void BM_ClockLRUCacheInsert_1(benchmark::State& state) {
   // keep those const variables inside the function and make it as constexpr
   constexpr int LRUC_SIZE = 1'885'725;
   constexpr int bfrom{0};
@@ -246,13 +246,13 @@ static void BM_LRUCacheInsert_1(benchmark::State& state) {
     delete lruc;
   }
 }
-BENCHMARK(BM_LRUCacheInsert_1);
+BENCHMARK(BM_ClockLRUCacheInsert_1);
 // ->Name("Insert in sequential");
 
 /**
  * Benchmark for LRUCache find in sequential.
  */
-static void BM_LRUCacheFind_1(benchmark::State& state) {
+static void BM_ClockLRUCacheFind_1(benchmark::State& state) {
   // keep those const variables inside the function and make it as constexpr
   constexpr int LRUC_SIZE = 1'885'725;
   constexpr int bfrom{0};
@@ -291,13 +291,13 @@ static void BM_LRUCacheFind_1(benchmark::State& state) {
     delete lruc;
   }
 }
-BENCHMARK(BM_LRUCacheFind_1);
+BENCHMARK(BM_ClockLRUCacheFind_1);
 // ->Name("Find in sequential");
 
 /**
  * Benchmark for LRUCache find/insert/erase in each thread.
  */
-static void BM_LRUCacheConcurrentFindInsertErase_1(benchmark::State& state) {
+static void BM_ClockLRUCacheConcurrentFindInsertErase_1(benchmark::State& state) {
   // keep those const variables inside the function and make it as constexpr
   constexpr int LRUC_SIZE = 1'885'725;
   constexpr int bfrom{0};
@@ -342,14 +342,14 @@ static void BM_LRUCacheConcurrentFindInsertErase_1(benchmark::State& state) {
     delete lruc;
   }
 }
-BENCHMARK(BM_LRUCacheConcurrentFindInsertErase_1)
+BENCHMARK(BM_ClockLRUCacheConcurrentFindInsertErase_1)
     // ->Name("[concurrent] Find/Insert/Erase in each Thread")
     ->Threads(tcnt);
 
 /**
  * Benchmark for LRUCache find/insert/erase in different thread.
  */
-static void BM_LRUCacheConcurrentFindInsertErase_2(benchmark::State& state) {
+static void BM_ClockLRUCacheConcurrentFindInsertErase_2(benchmark::State& state) {
   // keep those const variables inside the function and make it as constexpr
   constexpr int LRUC_SIZE = 1'885'725;
   constexpr int bfrom{0};
@@ -397,14 +397,14 @@ static void BM_LRUCacheConcurrentFindInsertErase_2(benchmark::State& state) {
     delete lruc;
   }
 }
-BENCHMARK(BM_LRUCacheConcurrentFindInsertErase_2)
+BENCHMARK(BM_ClockLRUCacheConcurrentFindInsertErase_2)
     // // ->Name("[concurrent] Find/Insert/Erase in different Thread")
     ->Threads(tcnt);
 
 /**
  * Benchmark for LRUCache find/insert/erase with same key in different thread.
  */
-static void BM_LRUCacheConcurrentFindInsertErase_3(benchmark::State& state) {
+static void BM_ClockLRUCacheConcurrentFindInsertErase_3(benchmark::State& state) {
   constexpr int LRUC_SIZE = 42;
   constexpr int EXPIRYTS{42};
   auto key1 = create_IpAddress("192.168.1.1");
@@ -433,7 +433,7 @@ static void BM_LRUCacheConcurrentFindInsertErase_3(benchmark::State& state) {
     delete lruc;
   }
 }
-BENCHMARK(BM_LRUCacheConcurrentFindInsertErase_3)
+BENCHMARK(BM_ClockLRUCacheConcurrentFindInsertErase_3)
     // ->Name("[concurrent] Find/Insert/Erase same key in different Thread")
     ->Threads(tcnt);
 

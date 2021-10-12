@@ -11,7 +11,7 @@ using namespace testing;
 /**
  * Init. LRUCache with 255 entries
  */
-class LRUCacheTest : public Test {
+class ClockLRUCacheTest : public Test {
 protected:
   constexpr static int LRUC_SIZE = 255;
   constexpr static int EXPIRYTS = 42;
@@ -37,7 +37,7 @@ protected:
 /**
  * Single thread access LRU cache test.
  */
-TEST_F(LRUCacheTest, TestSingleThread) {
+TEST_F(ClockLRUCacheTest, TestSingleThread) {
   constexpr const char* EVICTED_IP = "192.0.0.0";
   constexpr const char* NOT_EVICTED_IP = "192.0.0.1";
 
@@ -81,7 +81,7 @@ TEST_F(LRUCacheTest, TestSingleThread) {
  *
  * Adding 192 new IPs into a fully filled cache concurrently.
  */
-TEST_F(LRUCacheTest, TestMultiThread_1) {
+TEST_F(ClockLRUCacheTest, TestMultiThread_1) {
   constexpr const char* EVICTED_IP = "192.0.0.0";
 
   ASSERT_EQ(LRUC_SIZE, lruc.size()) << "cache.size() result not match";
@@ -126,7 +126,7 @@ TEST_F(LRUCacheTest, TestMultiThread_1) {
  * 1. Flush out LRUC_SIZE IPs and filled with new ones.
  * 2. Read IPs concurrently during the flush out.
  */
-TEST_F(LRUCacheTest, TestMultiThread_2) {
+TEST_F(ClockLRUCacheTest, TestMultiThread_2) {
   ASSERT_EQ(LRUC_SIZE, lruc.size()) << "cache.size() result not match";
   ASSERT_EQ(LRUC_SIZE, lruc.capacity()) << "cache.capacity() result not match";
 
@@ -194,7 +194,7 @@ TEST_F(LRUCacheTest, TestMultiThread_2) {
 /**
  * Test concurrent insert same key
  */
-TEST(LRUCacheTest_Same_Key, ConcurrentInsert) {
+TEST(ClockLRUCacheTest_Same_Key, ConcurrentInsert) {
   auto key = create_IpAddress("192.168.1.1");
   auto value = create_cache_value(42);
   std::array<unsigned char, 10000> data;
@@ -213,7 +213,7 @@ TEST(LRUCacheTest_Same_Key, ConcurrentInsert) {
 /**
  * Test concurrent erase same key
  */
-TEST(LRUCacheTest_Same_Key, ConcurrentErase) {
+TEST(ClockLRUCacheTest_Same_Key, ConcurrentErase) {
   auto key = create_IpAddress("192.168.1.1");
   auto value = create_cache_value(42);
   std::array<unsigned char, 10000> data;
@@ -240,7 +240,7 @@ TEST(LRUCacheTest_Same_Key, ConcurrentErase) {
 /**
  * Test concurrent insert/erase same key
  */
-TEST(LRUCacheTest_Same_Key, ConcurrentInsertErase) {
+TEST(ClockLRUCacheTest_Same_Key, ConcurrentInsertErase) {
   using PAYLOAD_TYPE = decltype(create_cache_value(42));
   auto key1 = create_IpAddress("192.168.1.1");
 
@@ -279,7 +279,7 @@ TEST(LRUCacheTest_Same_Key, ConcurrentInsertErase) {
 /**
  * Test concurrent insert/erase/find same key
  */
-TEST(LRUCacheTest_Same_Key, ConcurrentInsertEraseFind) {
+TEST(ClockLRUCacheTest_Same_Key, ConcurrentInsertEraseFind) {
   using PAYLOAD_TYPE = decltype(create_cache_value(42));
   auto key1 = create_IpAddress("192.168.1.1");
 
@@ -321,7 +321,7 @@ TEST(LRUCacheTest_Same_Key, ConcurrentInsertEraseFind) {
  * Test concurrent insert same key with limited cache capacity
  * Check if cache obeys LRU contract.
  */
-TEST(LRUCacheTest_Same_Key, ConcurrentInsertAndPop) {
+TEST(ClockLRUCacheTest_Same_Key, ConcurrentInsertAndPop) {
   using PAYLOAD_TYPE = decltype(create_cache_value(42));
   auto key1 = create_IpAddress("192.168.1.1");
   auto key2 = create_IpAddress("192.168.1.2");
