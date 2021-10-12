@@ -36,5 +36,6 @@ jobs: # job is the container
       - name: make
         run: cd build && ninja -v
       - name: ctest
-        run: cd build/test_bin && ./lruc_test && ./scale_lruc_test && ./clock_lruc_test && ./lruc_benchmark && ./scale_lruc_benchmark && ./clock_lruc_benchmark
+        # run: cd build/test_bin && ./lruc_test && ./scale_lruc_test && ./clock_lruc_test && ./lruc_benchmark && ./scale_lruc_benchmark && ./clock_lruc_benchmark
+        run: cd build/test_bin && ./clock_lruc_test && ./clock_lruc_benchmark
       - run: echo "🍏 This job's status is ${{ job.status }}."
