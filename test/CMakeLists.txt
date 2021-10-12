@@ -9,6 +9,33 @@ SET(COMPILE_OPTION -g -Wall -Wconversion -Wdouble-promotion -Weffc++ -Wextra -Wf
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-omit-frame-pointer -fsanitize=address")
 set (CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -fno-omit-frame-pointer -fsanitize=address")
 
+# -- ClockLRUCache unit test --
+SET(ClockLRUCACHE_TEST_SRC "ClockLRUcacheTest.cc")
+SET(ClockLRUCACHE_TEST clock_lruc_test)
+add_executable(${ClockLRUCACHE_TEST} ${ClockLRUCACHE_TEST_SRC})
+
+# compile/link options
+target_compile_features(${ClockLRUCACHE_TEST} PRIVATE cxx_std_17)
+target_compile_options(${ClockLRUCACHE_TEST} PRIVATE ${COMPILE_OPTION})
+
+target_include_directories(${ClockLRUCACHE_TEST} PRIVATE "${CMAKE_SOURCE_DIR}/include" ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(${ClockLRUCACHE_TEST} PRIVATE TBB::tbb)
+target_link_libraries(${ClockLRUCACHE_TEST} PRIVATE GTest::gtest_main)
+# gtest_discover_tests(${LRUCACHE_TESU})
+add_test(NAME clock_lrucache_unit_test COMMAND clock_lruc_test)
+
+# -- ClockLRUCache benchmark test --
+SET(CLOCKLRUCACHE_BENCH clock_lruc_benchmark)
+SET(CLOCKLRUCACHE_BENCH_SRC "clock_lrucache_bench.cc")
+add_executable(${CLOCKLRUCACHE_BENCH} ${CLOCKLRUCACHE_BENCH_SRC})
+
+# compile/link options
+target_compile_features(${CLOCKLRUCACHE_BENCH} PRIVATE cxx_std_17)
+target_compile_options(${CLOCKLRUCACHE_BENCH} PRIVATE ${COMPILE_OPTION})
+
+target_include_directories(${CLOCKLRUCACHE_BENCH} PRIVATE "${CMAKE_SOURCE_DIR}/include" ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(${CLOCKLRUCACHE_BENCH} PRIVATE benchmark::benchmark)
+
 # -- LRUCache unit test --
 SET(LRUCACHE_TEST_SRC "LRUcacheTest.cc")
 SET(LRUCACHE_TEST lruc_test)
@@ -71,6 +98,12 @@ target_link_libraries(${SCALE_LRUCACHE_BENCH} PRIVATE benchmark::benchmark)
 
 
 # -- setup binary location --
+set_property(TARGET ${ClockLRUCACHE_TEST}
+    PROPERTY RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/test_bin")
+
+set_property(TARGET ${CLOCKLRUCACHE_BENCH}
+    PROPERTY RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/test_bin")
+
 set_property(TARGET ${LRUCACHE_TEST}
     PROPERTY RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/test_bin")
 

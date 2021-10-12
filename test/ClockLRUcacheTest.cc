@@ -50,28 +50,27 @@ TEST_F(LRUCacheTest, TestSingleThread) {
   std::uniform_int_distribution<> rangeD{1, 254};
   std::uniform_int_distribution<> rangeFalseB{1, 254};
 
-  IPLRUCache::ConstAccessor ca;
   std::stringstream randomFalseIPv4;
   randomFalseIPv4 << "192." << rangeFalseB(gen) << "." << rangeC(gen) << "." << rangeD(gen);
-  EXPECT_FALSE(lruc.find(ca, create_IpAddress(randomFalseIPv4.str())))
+  EXPECT_FALSE(lruc.find(create_IpAddress(randomFalseIPv4.str())).has_value())
       << "IP [" << randomFalseIPv4.str() << "] shouldn't be found in lru-cache";
 
   std::stringstream randomIPv4;
   randomIPv4 << "192." << rangeB(gen) << "." << rangeC(gen) << "." << rangeD(gen);
-  EXPECT_TRUE(lruc.find(ca, create_IpAddress(randomIPv4.str())))
-      << "IP [" << randomIPv4.str() << "] can't be found in lru-cache";
-  EXPECT_EQ(EXPIRYTS, (*ca).expiryTs);
+  auto found = lruc.find(create_IpAddress(randomIPv4.str()));
+  EXPECT_TRUE(found.has_value()) << "IP [" << randomIPv4.str() << "] can't be found in lru-cache";
+  EXPECT_EQ(EXPIRYTS, (*found).expiryTs);
 
   lruc.insert(create_IpAddress(randomFalseIPv4.str()), create_cache_value(EXPIRYTS));
-  EXPECT_FALSE(lruc.find(ca, create_IpAddress(EVICTED_IP)));
-  EXPECT_TRUE(lruc.find(ca, create_IpAddress(NOT_EVICTED_IP)));
+  EXPECT_TRUE(lruc.find(create_IpAddress(randomFalseIPv4.str())).has_value());
 
   auto eraseResult = lruc.erase(create_IpAddress(randomFalseIPv4.str()));
   EXPECT_EQ(1, eraseResult);
   EXPECT_EQ(LRUC_SIZE - 1, lruc.size());
 
   lruc.clear();
-  EXPECT_FALSE(lruc.find(ca, create_IpAddress(NOT_EVICTED_IP))) << "LRU cache cleared but IP key still can be found";
+  EXPECT_FALSE(lruc.find(create_IpAddress(NOT_EVICTED_IP)).has_value())
+      << "LRU cache cleared but IP key still can be found";
   EXPECT_EQ(0, lruc.size()) << "LRU cache cleared but size still show not 0";
 
   ASSERT_EQ(LRUC_SIZE, lruc.capacity()) << "cache.capacity() result not match";
@@ -94,7 +93,7 @@ TEST_F(LRUCacheTest, TestMultiThread_1) {
   std::uniform_int_distribution<> rangeParallelB{1, 254};
 
   constexpr int ipCnt = 42;
-  // 192 random new IPs to be inserted into a filled cache.
+  // 42 random new IPs to be inserted into a filled cache.
   std::unordered_set<std::string> randomIPs{ipCnt};
 
   auto i = 0;
@@ -108,20 +107,14 @@ TEST_F(LRUCacheTest, TestMultiThread_1) {
 
   // concurrent insert/read from LRUCache
   tbb::parallel_for_each(begin(randomIPs), end(randomIPs), [this](auto item) {
-    IPLRUCache::ConstAccessor ca;
     // insert IP concurrently
     lruc.insert(create_IpAddress(item), create_cache_value(EXPIRYTS));
-    EXPECT_TRUE(lruc.find(ca, create_IpAddress(item)));
+    EXPECT_TRUE(lruc.find(create_IpAddress(item)).has_value());
 
     auto eraseResult = lruc.erase(create_IpAddress(item));
-    EXPECT_FALSE(lruc.find(ca, create_IpAddress(item)));
+    EXPECT_FALSE(lruc.find(create_IpAddress(item)).has_value());
     EXPECT_EQ(1, eraseResult);
-
-    EXPECT_FALSE(lruc.find(ca, create_IpAddress(item)));
   });
-
-  IPLRUCache::ConstAccessor ca;
-  EXPECT_FALSE(lruc.find(ca, create_IpAddress(EVICTED_IP)));
 
   EXPECT_GE(LRUC_SIZE, lruc.size()) << "cache.size() result not match";
   ASSERT_EQ(LRUC_SIZE, lruc.capacity()) << "cache.capacity() result not match";
@@ -171,8 +164,7 @@ TEST_F(LRUCacheTest, TestMultiThread_2) {
         return ipv4;
         // stage 3.
       }) & tbb::make_filter<std::string, std::string>(tbb::filter::parallel, [this](auto ipv4) -> std::string {
-        IPLRUCache::ConstAccessor ca;
-        bool result = lruc.find(ca, create_IpAddress(ipv4));
+        bool result = lruc.find(create_IpAddress(ipv4)).has_value();
 
         EXPECT_TRUE(result) << "IP: [" << ipv4 << "] not found";
 
@@ -186,8 +178,7 @@ TEST_F(LRUCacheTest, TestMultiThread_2) {
         return ipv4;
         // stage 5.
       }) & tbb::make_filter<std::string, int>(tbb::filter::parallel, [this](auto ipv4) -> int {
-        IPLRUCache::ConstAccessor ca;
-        bool result = lruc.find(ca, create_IpAddress(ipv4));
+        bool result = lruc.find(create_IpAddress(ipv4)).has_value();
 
         EXPECT_FALSE(result) << "IP: [" << ipv4 << "] found after erase";
 
@@ -208,11 +199,10 @@ TEST(LRUCacheTest_Same_Key, ConcurrentInsert) {
   auto value = create_cache_value(42);
   std::array<unsigned char, 10000> data;
   data.fill('o');
-  IPLRUCache lruc{42};
+  IPClockLRUCache lruc{42};
 
   // concurrent insert
   tbb::parallel_for_each(data, [&, key, value](auto _) {
-    IPLRUCache::ConstAccessor ca;
     // insert IP concurrently
     lruc.insert(key, value);
   });
@@ -228,11 +218,10 @@ TEST(LRUCacheTest_Same_Key, ConcurrentErase) {
   auto value = create_cache_value(42);
   std::array<unsigned char, 10000> data;
   data.fill('o');
-  IPLRUCache lruc{42};
+  IPClockLRUCache lruc{42};
 
   // concurrent insert
   tbb::parallel_for_each(data, [&, key, value](auto _) {
-    IPLRUCache::ConstAccessor ca;
     // insert IP concurrently
     lruc.insert(key, value);
   });
@@ -241,7 +230,6 @@ TEST(LRUCacheTest_Same_Key, ConcurrentErase) {
 
   // concurrent erase
   tbb::parallel_for_each(data, [&, key](auto _) {
-    IPLRUCache::ConstAccessor ca;
     // erase IP concurrently
     lruc.erase(key);
   });
@@ -262,7 +250,7 @@ TEST(LRUCacheTest_Same_Key, ConcurrentInsertErase) {
     return create_cache_value(i++);
   });
 
-  IPLRUCache lruc{42};
+  IPClockLRUCache lruc{42};
 
   auto si = std::begin(values);
   auto ei = std::end(values);
@@ -282,8 +270,7 @@ TEST(LRUCacheTest_Same_Key, ConcurrentInsertErase) {
                            // stage 3, erase keys.
                          }) & tbb::make_filter<void, void>(tbb::filter::parallel, [&](auto _) { lruc.erase(key1); }));
 
-  IPLRUCache::ConstAccessor ca;
-  bool result = lruc.find(ca, key1);
+  bool result = lruc.find(key1).has_value();
   ASSERT_FALSE(result) << "key found in cache after erase";
 
   ASSERT_EQ(0, lruc.size()) << "cache.size() is not 0";
@@ -302,7 +289,7 @@ TEST(LRUCacheTest_Same_Key, ConcurrentInsertEraseFind) {
     return create_cache_value(i++);
   });
 
-  IPLRUCache lruc{42};
+  IPClockLRUCache lruc{42};
 
   auto si = std::begin(values);
   auto ei = std::end(values);
@@ -322,13 +309,9 @@ TEST(LRUCacheTest_Same_Key, ConcurrentInsertEraseFind) {
                            // stage 3, erase keys.
                          }) & tbb::make_filter<void, void>(tbb::filter::parallel, [&](auto _) {
                            lruc.erase(key1);
-                         }) & tbb::make_filter<void, void>(tbb::filter::parallel, [&](auto _) {
-                           IPLRUCache::ConstAccessor ca;
-                           lruc.find(ca, key1);
-                         }));
+                         }) & tbb::make_filter<void, void>(tbb::filter::parallel, [&](auto _) { lruc.find(key1); }));
 
-  IPLRUCache::ConstAccessor ca;
-  bool result = lruc.find(ca, key1);
+  bool result = lruc.find(key1).has_value();
   ASSERT_FALSE(result) << "key found in cache after erase";
 
   ASSERT_EQ(0, lruc.size()) << "cache.size() is not 0";
@@ -349,7 +332,7 @@ TEST(LRUCacheTest_Same_Key, ConcurrentInsertAndPop) {
     return create_cache_value(i++);
   });
 
-  IPLRUCache lruc{1};
+  IPClockLRUCache lruc{1};
 
   auto si = std::begin(values);
   auto ei = std::end(values);

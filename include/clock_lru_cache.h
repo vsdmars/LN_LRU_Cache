@@ -31,7 +31,6 @@ private:
   KeyVector keyBuf_;
   ValueVector valueBuf_;
   CharVector surviveBuf_;
-  std::atomic<int> current_size_;
   const size_t capacity_;
   size_t cur_idx_;
   size_t evict_idx_;
@@ -44,7 +43,7 @@ public:
   LRUClockCache(const LRUClockCache& other) = delete;
   LRUClockCache& operator=(const LRUClockCache&) = delete;
 
-  int size() const { return current_size_.load(); }
+  typename HashMap::size_type size() const { return hash_map_.size(); }
   constexpr size_t capacity() const noexcept { return capacity_; }
 
   void clear() noexcept;
@@ -55,11 +54,10 @@ public:
 
 template <typename TKey, typename TValue, typename THash, typename TKeyEqual>
 LRUClockCache<TKey, TValue, THash, TKeyEqual>::LRUClockCache(size_t size)
-    : capacity_(size), cur_idx_(0), evict_idx_(capacity_ / 2) {
+    : surviveBuf_(size), capacity_(size), cur_idx_(0), evict_idx_(capacity_ / 2) {
   hash_map_.reserve(capacity_);
   keyBuf_.resize(capacity_);
   valueBuf_.resize(capacity_);
-  surviveBuf_.resize(capacity_);
 }
 
 template <typename TKey, typename TValue, typename THash, typename TKeyEqual>
@@ -70,7 +68,7 @@ void LRUClockCache<TKey, TValue, THash, TKeyEqual>::clear() noexcept {
 template <typename TKey, typename TValue, typename THash, typename TKeyEqual>
 size_t LRUClockCache<TKey, TValue, THash, TKeyEqual>::erase(const TKey& key) {
   std::unique_lock lock(mutex_);
-  hash_map_.erase(key);
+  return hash_map_.erase(key);
 }
 
 template <typename TKey, typename TValue, typename THash, typename TKeyEqual>
@@ -95,6 +93,7 @@ bool LRUClockCache<TKey, TValue, THash, TKeyEqual>::insert(const TKey& key, cons
   }
 
   std::unique_lock lock(mutex_);
+  // signed; use -1
   long long victim_idx = -1;
 
   while (victim_idx == -1) {
@@ -108,7 +107,7 @@ bool LRUClockCache<TKey, TValue, THash, TKeyEqual>::insert(const TKey& key, cons
     }
 
     if (surviveBuf_[evict_idx_] == 0) {
-      victim_idx = evict_idx_;
+      victim_idx = static_cast<decltype(victim_idx)>(evict_idx_);
     }
 
     evict_idx_++;
@@ -117,12 +116,12 @@ bool LRUClockCache<TKey, TValue, THash, TKeyEqual>::insert(const TKey& key, cons
     }
   }
 
-  hash_map_.erase(keyBuf_[victim_idx]);
+  hash_map_.erase(keyBuf_[static_cast<size_t>(victim_idx)]);
 
-  keyBuf_[victim_idx] = key;
-  valueBuf_[victim_idx] = value;
-  surviveBuf_[victim_idx] = 1;
-  hash_map_.emplace(key, victim_idx);
+  keyBuf_[static_cast<size_t>(victim_idx)] = key;
+  valueBuf_[static_cast<size_t>(victim_idx)] = value;
+  surviveBuf_[static_cast<size_t>(victim_idx)] = 0;
+  hash_map_.emplace(key, static_cast<size_t>(victim_idx));
 
   return true;
 }

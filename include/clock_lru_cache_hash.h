@@ -1,3 +1,5 @@
+#pragma once
+
 #include <ats_type.h>
 
 #include <boost/functional/hash.hpp>

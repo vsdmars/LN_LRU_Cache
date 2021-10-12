@@ -146,6 +146,16 @@ void containerInsert(SCALE_IPLRUCache& lruc, int b, int c, int d, int expiryTS) 
 }
 
 /**
+ * containerInsert inserts IPv4 class C address into LRUC::LRUClockCache with value
+ * CacheValue<CACHE_VALUE_TYPE::TIME_ENTITY_LOOKUP_INFO>
+ *
+ */
+template <>
+void containerInsert(IPClockLRUCache& lruc, int b, int c, int d, int expiryTS) {
+  lruc.insert(create_IpAddress(getIPv4(b, c, d)), create_cache_value(expiryTS));
+}
+
+/**
  * ipJob fills the container/cache t with ranged IPv4 class address (e.g '192.b.c.d')
  * with value CacheValue<CACHE_VALUE_TYPE::TIME_ENTITY_LOOKUP_INFO>
  *
