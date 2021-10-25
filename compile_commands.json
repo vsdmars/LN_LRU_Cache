@@ -1,0 +1,32 @@
+[
+{
+  "directory": "/files/cpp_project/LN_LRU_Cache/build",
+  "command": "/usr/bin/clang++ -I/files/cpp_project/LN_LRU_Cache/include -I/files/cpp_project/LN_LRU_Cache/test  -fno-omit-frame-pointer -fsanitize=address -O3 -DNDEBUG -g -Wall -Wconversion -Wdouble-promotion -Weffc++ -Wextra -Wfloat-equal -Wformat=2 -Wno-error=unused-variable -Wnull-dereference -Wold-style-cast -Wpedantic -Wshadow -Wuninitialized -Wunreachable-code -Wredundant-move -Wpessimizing-move -std=gnu++17 -o test/CMakeFiles/scale_lruc_benchmark.dir/scalable_lrucache_bench.cc.o -c /files/cpp_project/LN_LRU_Cache/test/scalable_lrucache_bench.cc",
+  "file": "/files/cpp_project/LN_LRU_Cache/test/scalable_lrucache_bench.cc"
+},
+{
+  "directory": "/files/cpp_project/LN_LRU_Cache/build",
+  "command": "/usr/bin/clang++ -I/files/cpp_project/LN_LRU_Cache/include -I/files/cpp_project/LN_LRU_Cache/test  -fno-omit-frame-pointer -fsanitize=address -O3 -DNDEBUG -g -Wall -Wconversion -Wdouble-promotion -Weffc++ -Wextra -Wfloat-equal -Wformat=2 -Wno-error=unused-variable -Wnull-dereference -Wold-style-cast -Wpedantic -Wshadow -Wuninitialized -Wunreachable-code -Wredundant-move -Wpessimizing-move -std=gnu++17 -o test/CMakeFiles/scale_lruc_test.dir/ScaleLRUcacheTest.cc.o -c /files/cpp_project/LN_LRU_Cache/test/ScaleLRUcacheTest.cc",
+  "file": "/files/cpp_project/LN_LRU_Cache/test/ScaleLRUcacheTest.cc"
+},
+{
+  "directory": "/files/cpp_project/LN_LRU_Cache/build",
+  "command": "/usr/bin/clang++ -I/files/cpp_project/LN_LRU_Cache/include -I/files/cpp_project/LN_LRU_Cache/test  -fno-omit-frame-pointer -fsanitize=address -O3 -DNDEBUG -g -Wall -Wconversion -Wdouble-promotion -Weffc++ -Wextra -Wfloat-equal -Wformat=2 -Wno-error=unused-variable -Wnull-dereference -Wold-style-cast -Wpedantic -Wshadow -Wuninitialized -Wunreachable-code -Wredundant-move -Wpessimizing-move -std=gnu++17 -o test/CMakeFiles/lruc_test.dir/LRUcacheTest.cc.o -c /files/cpp_project/LN_LRU_Cache/test/LRUcacheTest.cc",
+  "file": "/files/cpp_project/LN_LRU_Cache/test/LRUcacheTest.cc"
+},
+{
+  "directory": "/files/cpp_project/LN_LRU_Cache/build",
+  "command": "/usr/bin/clang++ -I/files/cpp_project/LN_LRU_Cache/include -I/files/cpp_project/LN_LRU_Cache/test  -fno-omit-frame-pointer -fsanitize=address -O3 -DNDEBUG -g -Wall -Wconversion -Wdouble-promotion -Weffc++ -Wextra -Wfloat-equal -Wformat=2 -Wno-error=unused-variable -Wnull-dereference -Wold-style-cast -Wpedantic -Wshadow -Wuninitialized -Wunreachable-code -Wredundant-move -Wpessimizing-move -std=gnu++17 -o test/CMakeFiles/clock_lruc_benchmark.dir/clock_lrucache_bench.cc.o -c /files/cpp_project/LN_LRU_Cache/test/clock_lrucache_bench.cc",
+  "file": "/files/cpp_project/LN_LRU_Cache/test/clock_lrucache_bench.cc"
+},
+{
+  "directory": "/files/cpp_project/LN_LRU_Cache/build",
+  "command": "/usr/bin/clang++ -I/files/cpp_project/LN_LRU_Cache/include -I/files/cpp_project/LN_LRU_Cache/test  -fno-omit-frame-pointer -fsanitize=address -O3 -DNDEBUG -g -Wall -Wconversion -Wdouble-promotion -Weffc++ -Wextra -Wfloat-equal -Wformat=2 -Wno-error=unused-variable -Wnull-dereference -Wold-style-cast -Wpedantic -Wshadow -Wuninitialized -Wunreachable-code -Wredundant-move -Wpessimizing-move -std=gnu++17 -o test/CMakeFiles/lruc_benchmark.dir/lrucache_bench.cc.o -c /files/cpp_project/LN_LRU_Cache/test/lrucache_bench.cc",
+  "file": "/files/cpp_project/LN_LRU_Cache/test/lrucache_bench.cc"
+},
+{
+  "directory": "/files/cpp_project/LN_LRU_Cache/build",
+  "command": "/usr/bin/clang++ -I/files/cpp_project/LN_LRU_Cache/include -I/files/cpp_project/LN_LRU_Cache/test  -fno-omit-frame-pointer -fsanitize=address -O3 -DNDEBUG -g -Wall -Wconversion -Wdouble-promotion -Weffc++ -Wextra -Wfloat-equal -Wformat=2 -Wno-error=unused-variable -Wnull-dereference -Wold-style-cast -Wpedantic -Wshadow -Wuninitialized -Wunreachable-code -Wredundant-move -Wpessimizing-move -std=gnu++17 -o test/CMakeFiles/clock_lruc_test.dir/ClockLRUcacheTest.cc.o -c /files/cpp_project/LN_LRU_Cache/test/ClockLRUcacheTest.cc",
+  "file": "/files/cpp_project/LN_LRU_Cache/test/ClockLRUcacheTest.cc"
+}
+]
