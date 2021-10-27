@@ -6,6 +6,8 @@
  */
 
 #include "lrucache_common.h"
+#include <iostream>
+using namespace std;
 
 using namespace testing;
 
@@ -131,6 +133,9 @@ TEST_F(ScaleLRUCacheTest, TestMultiThread_1) {
         // stage 2.
       }) & tbb::make_filter<std::string, std::string>(tbb::filter::parallel, [this](auto ipv4) -> std::string {
         lruc.insert(create_IpAddress(ipv4), create_cache_value(EXPIRYTS));
+
+        cout << lruc.size() << endl << flush;
+
         return ipv4;
         // stage 3.
       }) & tbb::make_filter<std::string, std::string>(tbb::filter::parallel, [this](auto ipv4) -> std::string {
